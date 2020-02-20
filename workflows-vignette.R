@@ -147,3 +147,10 @@ test_roc <-
 
 test_probs %>% roc_auc(Class, .pred_One)
 autoplot(test_roc)
+
+
+# rationalise to "typical" workflow ---------------------------------------
+
+# use lists to store models and workflows?
+
+

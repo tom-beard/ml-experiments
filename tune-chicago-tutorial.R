@@ -1,5 +1,5 @@
 
-# from tutorial -----------------------------------------------------------
+# from tutorial (insert URL!) -----------------------------------------------------------
 
 library(tidymodels)
 
@@ -65,6 +65,8 @@ grid_results %>%
 
 
 # as quasi-workflow -------------------------------------------------------
+
+# note: topepo is working on template_*() functions: https://github.com/tidymodels/tune/issues/167
 
 library(tidymodels)
 library(parsnip)

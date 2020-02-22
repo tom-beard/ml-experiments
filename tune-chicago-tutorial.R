@@ -1,5 +1,8 @@
 
 # from tutorial (insert URL!) -----------------------------------------------------------
+# siimilar but not identical to slides 8-15 from
+# https://github.com/topepo/aml-london-2019/blob/master/Part-5-Regression-Models.pdf,
+# code at https://github.com/topepo/aml-london-2019/blob/master/code.R, line 770-
 
 library(tidymodels)
 

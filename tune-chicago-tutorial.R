@@ -1,5 +1,5 @@
 
-# from tutorial (insert URL!) -----------------------------------------------------------
+# from tutorial (https://nyhackr.blob.core.windows.net/presentations/Totally_Tidy_Tuning_Tools-Max_Kuhn.pdf) -----------------------------------------------------------
 # similar but not identical to slides 8-15 from
 # https://github.com/topepo/aml-london-2019/blob/master/Part-5-Regression-Models.pdf,
 # code at https://github.com/topepo/aml-london-2019/blob/master/code.R, line 770-

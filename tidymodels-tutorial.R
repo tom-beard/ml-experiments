@@ -37,9 +37,6 @@ dia_train <- training(dia_split)
 dia_test <- testing(dia_split)
 
 dia_vfold <- vfold_cv(dia_train, v = folds, repeats = 1, strata = price)
-dia_vfold %>% 
-  mutate(df_ana = map(splits, analysis),
-         df_ass = map(splits, assessment))
 
 
 # feature engineering -----------------------------------------------------
@@ -62,7 +59,64 @@ dia_recipe <-
   step_dummy(all_nominal()) %>% 
   step_poly(carat, degree = 2)
   
-prep(dia_recipe)
-
 dia_juiced <- dia_recipe %>% prep() %>% juice()
 
+
+# defining and fitting models ---------------------------------------------
+
+lm_model <- 
+  linear_reg() %>% 
+  set_mode("regression") %>% 
+  set_engine("lm")
+  
+lm_fit1 <- lm_model %>% 
+  fit(price ~ ., dia_juiced)
+
+lm_fit1$fit %>% glance()
+lm_fit1 %>%
+  tidy() %>% 
+  arrange(abs(p.value))
+
+lm_predicted <- lm_fit1$fit %>% 
+  augment(data = dia_juiced) %>% 
+  rowid_to_column()
+
+lm_predicted %>% 
+  select(rowid, price, .fitted:.std.resid)
+
+lm_predicted %>% 
+  ggplot(aes(x = .fitted, y = price)) +
+  geom_point(alpha = 0.2) +
+  ggrepel::geom_label_repel(aes(label = rowid),
+                            data = filter(lm_predicted, abs(.resid) > 1)) +
+  labs(title = "Actual vs predicted price") +
+  theme_minimal() +
+  theme(panel.grid.minor = element_blank())
+
+
+# evaluating model performance --------------------------------------------
+
+# Note that the cross-validation code is a bit lengthy—for didactic
+# purposes. Wrapper functions (e.g., from the tune package) would lead to more
+# concise code: fit_resamples() could be used here (without tuning), or
+# tune_grid() and tune_bayes().
+
+lm_fit2 <- dia_vfold %>% 
+  mutate(df_ana = map(splits, analysis),
+         df_ass = map(splits, assessment)) %>% 
+  mutate(recipe = map(df_ana, ~prep(dia_recipe, training = .x)),
+         df_ana = map(recipe, juice),
+         df_ass = map2(recipe, df_ass,
+                       ~bake(.x, new_data = .y))) %>% 
+  mutate(model_fit = map(df_ana,
+                         ~fit(lm_model, price ~ ., data = .x))) %>% 
+  mutate(model_pred = map2(model_fit, df_ass,
+                           ~predict(.x, new_data = .y)))
+
+lm_preds <- lm_fit2 %>% 
+  mutate(res = map2(df_ass, model_pred, ~tibble(price = .x$price, .pred = .y$.pred))) %>% 
+  select(id, res) %>% 
+  unnest(res) %>% 
+  group_by(id)
+
+lm_preds %>% metrics(truth = price, estimate = .pred)

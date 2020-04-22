@@ -41,3 +41,28 @@ dia_vfold %>%
   mutate(df_ana = map(splits, analysis),
          df_ass = map(splits, assessment))
 
+
+# feature engineering -----------------------------------------------------
+
+dia_train %>% 
+  ggplot(aes(x = carat, y = price)) +
+  geom_point(alpha = 0.5) +
+  # geom_smooth(colour = "firebrick", fill = "red") +
+  geom_smooth(method = "lm", formula = "y ~ poly(x, 4)") +
+  scale_y_continuous(trans = log_trans(), labels = function (x) round(x, -2)) +
+  labs(title = "Nonlinear relationship between price and carat of diamonds",
+       subtitle = "The degree of the polynomial is a potential tuning parameter") +
+  theme_minimal() +
+  theme(panel.grid.minor = element_blank())
+  
+dia_recipe <- 
+  recipe(price ~ ., data = dia_train) %>% 
+  step_log(all_outcomes()) %>% 
+  step_normalize(all_predictors(), -all_nominal()) %>% 
+  step_dummy(all_nominal()) %>% 
+  step_poly(carat, degree = 2)
+  
+prep(dia_recipe)
+
+dia_juiced <- dia_recipe %>% prep() %>% juice()
+

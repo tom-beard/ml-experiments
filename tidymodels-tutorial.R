@@ -141,9 +141,10 @@ rf_model %>%
 dia_recipe_2 <- 
   recipe(price ~ ., data = dia_train) %>% 
   step_log(price) %>% 
-  step_log(all_outcomes()) %>%
-  step_normalize(all_predictors(), -all_nominal()) %>% 
-  step_dummy(all_nominal()) %>% 
+  # need to explicitly specify recipes:: so that the functions can be found by parallel workers
+  step_log(recipes::all_outcomes()) %>%
+  step_normalize(recipes::all_predictors(), -recipes::all_nominal()) %>% 
+  step_dummy(recipes::all_nominal()) %>% 
   step_poly(carat, degree = tune())
 
 dia_recipe_2 %>% 
@@ -163,17 +164,17 @@ rf_param <-
   parameters() %>% 
   update(mtry = mtry(range = c(3L, 5L)),
          degree = degree_int(range = c(2L, 4L)))
-rf_param$object
 
 rf_grid <- grid_regular(rf_param, levels = 3)
 
 library(doFuture)
 all_cores <- parallel::detectCores(logical = FALSE) - 1
-
 registerDoFuture()
 cl <- makeCluster(all_cores)
 plan(future::cluster, workers = cl)
-plan(sequential) # undoes previous line, because some of recipes doesn't work with cluster
+
+# note: if parallel processing isn't working, use the following line to revert to sequential
+# plan(sequential)
 
 rf_search <- tune_grid(rf_workflow, grid = rf_grid, resamples = dia_vfold,
                        param_info = rf_param)

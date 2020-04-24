@@ -120,3 +120,62 @@ lm_preds <- lm_fit2 %>%
   group_by(id)
 
 lm_preds %>% metrics(truth = price, estimate = .pred)
+
+
+# tuning hyperparameters --------------------------------------------------
+
+rf_model <- 
+  rand_forest(mtry = tune()) %>% 
+  set_mode("regression") %>% 
+  set_engine("ranger")
+
+rf_model %>%
+  parameters() %>% 
+  update(mtry = mtry(c(1L, 5L)))
+
+rf_model %>%
+  parameters() %>% 
+  finalize(x = select(juice(prep(dia_recipe)), -price)) %>% 
+  pull("object")
+
+dia_recipe_2 <- 
+  recipe(price ~ ., data = dia_train) %>% 
+  step_log(price) %>% 
+  step_log(all_outcomes()) %>%
+  step_normalize(all_predictors(), -all_nominal()) %>% 
+  step_dummy(all_nominal()) %>% 
+  step_poly(carat, degree = tune())
+
+dia_recipe_2 %>% 
+  parameters() %>% 
+  pull("object")
+
+
+# workflows ---------------------------------------------------------------
+
+rf_workflow <- 
+  workflow() %>% 
+  add_model(rf_model) %>% 
+  add_recipe(dia_recipe_2)
+
+rf_param <- 
+  rf_workflow %>% 
+  parameters() %>% 
+  update(mtry = mtry(range = c(3L, 5L)),
+         degree = degree_int(range = c(2L, 4L)))
+rf_param$object
+
+rf_grid <- grid_regular(rf_param, levels = 3)
+
+library(doFuture)
+all_cores <- parallel::detectCores(logical = FALSE) - 1
+
+registerDoFuture()
+cl <- makeCluster(all_cores)
+plan(future::cluster, workers = cl)
+plan(sequential) # undoes previous line, because some of recipes doesn't work with cluster
+
+rf_search <- tune_grid(rf_workflow, grid = rf_grid, resamples = dia_vfold,
+                       param_info = rf_param)
+beepr::beep()
+

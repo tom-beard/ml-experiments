@@ -24,16 +24,16 @@ dia_test <- testing(dia_split)
 dia_vfold <- vfold_cv(dia_train, v = folds, repeats = 1, strata = price)
 
 
-# feature engineering -----------------------------------------------------
+# feature engineering (including tuneable step) --------------------------
 
-# is this still required once we have dia_recipe_2?
+dia_recipe <- 
+  recipe(price ~ ., data = dia_train) %>% 
+  # need to explicitly specify recipes:: so that the functions can be found by parallel workers
+  step_log(recipes::all_outcomes()) %>%
+  step_normalize(recipes::all_predictors(), -recipes::all_nominal()) %>% 
+  step_dummy(recipes::all_nominal()) %>% 
+  step_poly(carat, degree = tune())
 
-# dia_recipe <- 
-#   recipe(price ~ ., data = dia_train) %>% 
-#   step_log(all_outcomes()) %>% 
-#   step_normalize(all_predictors(), -all_nominal()) %>% 
-#   step_dummy(all_nominal()) %>% 
-#   step_poly(carat, degree = 2)
 
 # tuning hyperparameters --------------------------------------------------
 
@@ -42,34 +42,13 @@ rf_model <-
   set_mode("regression") %>% 
   set_engine("ranger")
 
-# rf_model %>%
-#   parameters() %>% 
-#   update(mtry = mtry(c(1L, 5L)))
-# 
-# rf_model %>%
-#   parameters() %>% 
-#   finalize(x = select(juice(prep(dia_recipe)), -price)) %>% 
-#   pull("object")
-
-dia_recipe_2 <- 
-  recipe(price ~ ., data = dia_train) %>% 
-  # need to explicitly specify recipes:: so that the functions can be found by parallel workers
-  step_log(recipes::all_outcomes()) %>%
-  step_normalize(recipes::all_predictors(), -recipes::all_nominal()) %>% 
-  step_dummy(recipes::all_nominal()) %>% 
-  step_poly(carat, degree = tune())
-
-dia_recipe_2 %>% 
-  parameters() %>% 
-  pull("object")
-
 
 # workflows ---------------------------------------------------------------
 
 rf_workflow <- 
   workflow() %>% 
   add_model(rf_model) %>% 
-  add_recipe(dia_recipe_2)
+  add_recipe(dia_recipe)
 
 rf_param <- 
   rf_workflow %>% 
@@ -114,10 +93,10 @@ rf_workflow_final_fit <- rf_workflow_final %>% fit(data = dia_train)
 # data set together with the extracted model can then be used for the final
 # predictions.
 
-dia_recipe_3 <- pull_workflow_prepped_recipe(rf_workflow_final_fit)
+dia_recipe_prepped <- pull_workflow_prepped_recipe(rf_workflow_final_fit)
 rf_final_fit <- pull_workflow_fit(rf_workflow_final_fit)
 
-dia_test$.pred <- predict(rf_final_fit, new_data = bake(dia_recipe_3, dia_test))$.pred
+dia_test$.pred <- predict(rf_final_fit, new_data = bake(dia_recipe_prepped, dia_test))$.pred
 dia_test$log_price <- log(dia_test$price)
 
 metrics(dia_test, truth = log_price, estimate = .pred)

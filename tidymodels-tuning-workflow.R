@@ -14,8 +14,13 @@ data("diamonds")
 
 set.seed(1243)
 
-test_prop <- 0.1
-folds <- 3
+# demo settings:
+# test_prop <- 0.1
+# folds <- 3
+
+# more realistic settings: takes ~15 minutes on laptop?
+test_prop <- 0.7
+folds <- 10
 
 dia_split <- initial_split(diamonds, prop = test_prop, strata = price)
 dia_train <- training(dia_split)

@@ -5,9 +5,7 @@ library(tidymodels)
 # simulate training data -------------------------------------------------------------
 
 set.seed(101)  # for reproducibility
-trn <- as.data.frame(mlbench::mlbench.friedman1(500))
-# trn <- as_tibble(mlbench::mlbench.friedman1(500))
-
+trn <- mlbench::mlbench.friedman1(500) %>% as.data.frame() %>% as_tibble()
 
 # trees & tree ensembles --------------------------------------------------------------------
 
@@ -21,7 +19,7 @@ tree <- rpart(y ~ ., data = trn)
 
 # Fit a random forest
 set.seed(101)
-rfo <- ranger(y ~ ., data = trn, importance = "impurity") # trn must be df, not tibble?
+rfo <- ranger(y ~ ., data = trn, importance = "impurity")
 
 # Fit a GBM
 set.seed(102)
@@ -37,5 +35,31 @@ bst <- xgboost(
 
 # to do: use parsnip idiom for the above
 
+(vi_tree <- tree$variable.importance)
+barplot(vi_tree, horiz = TRUE, las = 1)
+
+(vi_rfo <- rfo$variable.importance)
+barplot(vi_rfo, horiz = TRUE, las = 1)
+
+(vi_bst <- xgb.importance(model = bst))
+xgb.ggplot.importance(vi_bst)
 
 
+# vip versions ------------------------------------------------------------
+
+library(vip)
+
+tree %>% vi()
+rfo %>% vi()
+bst %>% vi()
+
+p1 <- vip(tree)
+p2 <- vip(rfo, aesthetics = list(fill = "green3"))
+p3 <- vip(bst, aesthetics = list(fill = "purple"))
+
+grid.arrange(p1, p2, p3, ncol = 3)
+
+bst %>% 
+  vip(num_features = 5, geom = "point", horizontal = FALSE, 
+      aesthetics = list(color = "red", shape = 17, size = 4)) +
+  theme_light()

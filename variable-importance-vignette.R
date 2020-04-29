@@ -121,5 +121,39 @@ pdps <- features %>%
                ylim(range(trn$y)) +
                theme_light()
       )
-  
 grid.arrange(grobs = pdps, ncol = 5)
+
+# method = "firm" seems to have replaced method = "pdp" in vi
+# p1 <- vip(pp, method = "pdp") + ggtitle("PPR")
+# p2 <- vip(nn, method = "pdp") + ggtitle("NN")
+p1 <- vip(pp, method = "firm") + ggtitle("PPR")
+p2 <- vip(nn, method = "firm") + ggtitle("NN")
+grid.arrange(p1, p2, ncol = 2)
+
+ice_curves <- features %>% 
+  map(~ partial(pp, pred.var = .x, ice = TRUE) %>%
+        autoplot(alpha = 0.1) +
+        ylim(range(trn$y)) +
+        theme_light()
+      )
+grid.arrange(grobs = ice_curves, ncol = 5)
+
+p1 <- vip(pp, method = "firm", ice = TRUE) + ggtitle("PPR")
+p2 <- vip(nn, method = "firm", ice = TRUE) + ggtitle("NN")
+grid.arrange(p1, p2, ncol = 2)
+
+set.seed(2021)
+
+p1 <- vip(pp, method = "permute", target = "y", metric = "rsquared", pred_wrapper = predict) + 
+  ggtitle("PPR")
+p2 <- vip(nn, method = "permute", target = "y", metric = "rsquared", pred_wrapper = predict) + 
+  ggtitle("NN")
+grid.arrange(p1, p2, ncol = 2)
+
+set.seed(2021)
+vip(pp, method = "permute", target = "y", metric = "rsquared", nsim = 20,
+    pred_wrapper = predict,
+    geom = "boxplot", all_permutations = TRUE,
+    mapping = aes_string(fill = "Variable"),
+    aesthetics = list(colour = "grey25")) + 
+  ggtitle("PPR")

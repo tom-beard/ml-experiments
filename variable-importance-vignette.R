@@ -199,14 +199,12 @@ nn %>%
 
 # interaction effects -----------------------------------------------------
 
-# from https://koalaverse.github.io/vip/articles/vip-interaction.html
+# based on https://koalaverse.github.io/vip/articles/vip-interaction.html
+# with some changes/fixes
 
-# Load required packages
 library(gbm)             # for fitting generalized boosted models
 library(lattice)         # for general visualization
-library(mlbench)         # for machine learning benchmark data sets
 library(NeuralNetTools)  # for various tools for neural networks
-# library(nnet)            # for fitting neural networks w/ a single hidden layer
 
 set.seed(101)
 trn <- mlbench::mlbench.friedman1(500, sd = 1) %>% as.data.frame() %>% as_tibble()

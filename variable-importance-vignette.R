@@ -215,4 +215,26 @@ set.seed(103)
 nn <- nnet(y ~ ., data = trn,
            size = 8, linout = TRUE, decay = 0.01, maxit = 1000, trace = FALSE)
 
-p1 <- vip()
+p1 <- vip(nn, method = "firm", feature_names = paste0("x.", 1:10)) +
+  labs(x = "", y = "Importance", title = "PDP method") +
+  theme_light()
+
+nn_garson <- garson(nn, bar_plot = FALSE) %>% 
+  rownames_to_column("Variable") %>% 
+  select(Variable, Importance = rel_imp)
+p2 <- ggplot(nn_garson, aes(x = reorder(Variable, Importance), y = Importance)) +
+  geom_col() +
+  labs(x = "", y = "Importance", title = "Garson's method") +
+    coord_flip() +
+  theme_light()
+
+nn_olden <- olden(nn, bar_plot = FALSE) %>% 
+  rownames_to_column("Variable") %>% 
+  select(Variable, Importance = importance)
+p3 <- ggplot(nn_olden, aes(x = reorder(Variable, Importance), y = Importance)) +
+  geom_col() +
+  labs(x = "", y = "Importance", title = "Olden's method") +
+    coord_flip() +
+  theme_light()
+
+grid.arrange(p1, p2, p3, ncol = 3)

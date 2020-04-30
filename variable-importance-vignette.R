@@ -202,7 +202,7 @@ nn %>%
 # from https://koalaverse.github.io/vip/articles/vip-interaction.html
 
 # Load required packages
-# library(gbm)             # for fitting generalized boosted models
+library(gbm)             # for fitting generalized boosted models
 library(lattice)         # for general visualization
 library(mlbench)         # for machine learning benchmark data sets
 library(NeuralNetTools)  # for various tools for neural networks
@@ -299,3 +299,45 @@ grid.arrange(
   sim2[[1]], sim2[[2]], sim2[[3]], 
   nrow = 2
 )
+
+# Friedman's H-statistic
+set.seed(937)
+trn_gbm <- gbm(y ~ ., data = trn, distribution = "gaussian", n.trees = 25000,
+               shrinkage = 0.01, interaction.depth = 2, bag.fraction = 1,
+               train.fraction = 0.8, cv.folds = 5, verbose = FALSE)
+best_iter <- gbm.perf(trn_gbm, method = "cv", plot.it = FALSE)
+
+combinations <- t(combn(paste0("x.", 1:10), m = 2))
+int_h <- numeric(nrow(combinations))
+for (i in 1:nrow(combinations)) {
+  int_h[i] <- interact.gbm(trn_gbm, data = trn, i.var = combinations[i, ], n.trees = best_iter)
+}
+int_h <- tibble(x = paste0(combinations[, 1L], "*", combinations[, 2L]), y = int_h)
+int_h <- int_h[order(int_h$y, decreasing = TRUE), ] # simpler with dplyr::arrange()
+
+int_i <- vint(
+  object = trn_gbm,
+  feature_names = paste0("x.", 1:10),
+  n.trees = best_iter,
+  parallel = TRUE
+)
+
+p1 <- int_h %>% 
+  dplyr::slice(1:10) %>% 
+  ggplot(aes(reorder(x, y), y)) +
+  geom_col(width = 0.75) +
+  labs(x = "", y = "Interaction strength", title = "Friedman H-statistic") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1)) +
+  theme_light() +
+  coord_flip()
+
+p2 <- int_i %>% 
+  dplyr::slice(1:10) %>% 
+  ggplot(aes(reorder(Variables, Interaction), Interaction)) +
+  geom_col(width = 0.75) +
+  labs(x = "", y = "Interaction strength", title = "Partial dependence") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1)) +
+  theme_light() +
+  coord_flip()
+
+grid.arrange(p1, p2, ncol = 2)

@@ -157,3 +157,62 @@ vip(pp, method = "permute", target = "y", metric = "rsquared", nsim = 20,
     mapping = aes_string(fill = "Variable"),
     aesthetics = list(colour = "grey25")) + 
   ggtitle("PPR")
+
+
+# diabetes data -----------------------------------------------------------
+
+library(ranger)
+data(pima, package = "pdp")
+pima <- na.omit(pima) %>% as_tibble()
+
+set.seed(1322)
+
+rfo1 <- ranger(diabetes ~ ., data = pima, importance = "permutation")
+rfo2 <- ranger(diabetes ~ ., data = pima, importance = "permutation", probability = TRUE)
+
+p1 <- vip(rfo1) # model-specific
+p2 <- vip(rfo2) # model-specific
+set.seed(1329)
+pfun <- function(object, newdata) predict(object, data = newdata)$predictions
+p3 <- vip(rfo1, method = "permute", metric = "error", pred_wrapper = pfun,
+          target = "diabetes")
+p4 <- vip(rfo2, method = "permute", metric = "auc", pred_wrapper = pfun,
+          target = "diabetes", reference_class = "neg")
+grid.arrange(p1, p2, p3, p4, ncol = 2)
+
+# why is importance nearly 0 for all vars in p4?
+
+# sparklines --------------------------------------------------------------
+
+var_imp <- vi(rfo2, method = "permute", metric = "auc", pred_wrapper = pfun,
+              target = "diabetes", reference_class = "neg")
+add_sparklines(var_imp, fit = rfo2)
+
+nn %>% 
+  vi(method = "firm") %>% 
+  add_sparklines()
+
+nn %>% 
+  vi(method = "firm") %>% 
+  add_sparklines(standardize_y = FALSE)
+
+
+# interaction effects -----------------------------------------------------
+
+# from https://koalaverse.github.io/vip/articles/vip-interaction.html
+
+# Load required packages
+# library(gbm)             # for fitting generalized boosted models
+library(lattice)         # for general visualization
+library(mlbench)         # for machine learning benchmark data sets
+library(NeuralNetTools)  # for various tools for neural networks
+# library(nnet)            # for fitting neural networks w/ a single hidden layer
+
+set.seed(101)
+trn <- mlbench::mlbench.friedman1(500, sd = 1) %>% as.data.frame() %>% as_tibble()
+
+set.seed(103)
+nn <- nnet(y ~ ., data = trn,
+           size = 8, linout = TRUE, decay = 0.01, maxit = 1000, trace = FALSE)
+
+p1 <- vip()

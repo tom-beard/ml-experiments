@@ -238,3 +238,64 @@ p3 <- ggplot(nn_olden, aes(x = reorder(Variable, Importance), y = Importance)) +
   theme_light()
 
 grid.arrange(p1, p2, p3, ncol = 3)
+
+# Simulation function
+sim_fun <- function(pred.var, pd.fun, xlabs = c("", ""), ylabs = c("", "")) {
+  x <- y <- seq(from = 0, to = 1, length = 100)
+  xy <- expand.grid(x, y)
+  z <- apply(xy, MARGIN = 1, FUN = function(x) {
+    pd.fun(x[1L], x[2L])
+  })
+  res <- as.data.frame(cbind(xy, z))
+  names(res) <- c(pred.var, "yhat")
+  form <- as.formula(paste("yhat ~", paste(paste(pred.var, collapse = "*"))))
+  p1 <- levelplot(form, data = res, col.regions = viridis::viridis,
+                  xlab = xlabs[1], ylab = xlabs[2])
+  approxVar.x <- function(x = 0.5, n = 100000) {
+    y <- runif(n, min = 0, max = 1)
+    sd(pd.fun(x, y))
+  }
+  approxVar.y <- function(y = 0.5, n = 100000) {
+    x <- runif(n, min = 0, max = 1)
+    sd(pd.fun(x, y))
+  }
+  x <- seq(from = 0, to = 1, length = 100)
+  y1 <- sapply(x, approxVar.x)
+  y2 <- sapply(x, approxVar.y)
+  p2 <- xyplot(SD ~ x, data = data.frame(x = x, SD = y1), type = "l",
+               lwd = 1, col = "black",
+               ylim = c(min(y1, na.rm = TRUE) - 1, max(y1, na.rm = TRUE) + 1),
+               xlab = xlabs[1],
+               ylab = ylabs[1])
+  p3 <- xyplot(SD ~ x, data = data.frame(x = x, SD = y2), type = "l",
+               lwd = 1, col = "black",
+               ylim = c(min(y2, na.rm = TRUE) - 1, max(y2, na.rm = TRUE) + 1),
+               xlab = xlabs[2],
+               ylab = ylabs[2])
+  list(p1, p2, p3)
+}
+
+# Run simulations
+sim1 <- sim_fun(
+  pred.var = c("x.1", "x.2"), 
+  xlabs = c(expression(x[1]), expression(x[2])),
+  ylabs = c(expression(imp ~ (x[2]*" | "*x[1])), 
+            expression(imp ~ (x[1]*" | "*x[2]))),
+  pd.fun = function(x1, x2) {
+    5 * (pi * x1 * (12 * x2 + 5) - 12 * cos(pi * x1) + 12) / (6 * pi * x1)
+  })
+sim2 <- sim_fun(
+  pred.var = c("x.1", "x.4"), 
+  xlabs = c(expression(x[1]), expression(x[4])),
+  ylabs = c(expression(imp ~ (x[4]*" | "*x[1])), 
+            expression(imp ~ (x[1]*" | "*x[4]))),
+  pd.fun = function(x1, x2) {
+    10 * sin(pi * x1 * x2) + 55 / 6
+  })
+
+# Display plots side by side
+grid.arrange(
+  sim1[[1]], sim1[[2]], sim1[[3]], 
+  sim2[[1]], sim2[[2]], sim2[[3]], 
+  nrow = 2
+)

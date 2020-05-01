@@ -51,6 +51,7 @@ rf_model <-
   rand_forest(mtry = tune()) %>% 
   set_mode("regression") %>% 
   set_engine("ranger")
+  # set_engine("ranger", importance = "impurity")
 
 # workflows ---------------------------------------------------------------
 
@@ -82,8 +83,16 @@ select_by_one_std_err(rf_search, mtry, degree, metric = "rmse", maximize = FALSE
 # final predictions -------------------------------------------------------
 
 rf_param_final <- select_by_one_std_err(rf_search, mtry, degree, metric = "rmse", maximize = FALSE)
-rf_workflow_final <- rf_workflow %>% finalize_workflow(rf_param_final)
-rf_workflow_final_fit <- rf_workflow_final %>% fit(data = data_train)
+
+rf_model_importance <- 
+  rand_forest(mtry = tune()) %>% 
+  set_mode("regression") %>% 
+  set_engine("ranger", importance = "impurity")
+
+rf_workflow_final_fit <- rf_workflow %>%
+  update_model(rf_model_importance) %>% 
+  finalize_workflow(rf_param_final) %>%
+  fit(data = data_train)
 
 # Now, we want to use this to predict() on data never seen before, namely,
 # data_test. Unfortunately, predict(rf_wflow_final_fit, new_data = data_test) does
@@ -98,9 +107,24 @@ rf_workflow_final_fit <- rf_workflow_final %>% fit(data = data_train)
 model_recipe_prepped <- pull_workflow_prepped_recipe(rf_workflow_final_fit)
 rf_final_fit <- pull_workflow_fit(rf_workflow_final_fit)
 
-data_test_transformed <- data_test %>% 
-  bind_cols(predict(rf_final_fit, new_data = bake(model_recipe_prepped, data_test))) %>% 
+data_test_transformed <- predict(rf_final_fit, new_data = bake(model_recipe_prepped, data_test)) %>% 
+  bind_cols(data_test) %>% 
   mutate(log_price = log(price))
 
 metrics(data_test_transformed, truth = log_price, estimate = .pred)
 
+# there's probably a less case-specific workaround for this, but let's move on
+
+
+# variable importance -----------------------------------------------------
+
+p1 <- vip(rf_final_fit) + 
+  ggtitle("rf, model-based")
+p1
+
+# setting up model-agnostic vi might be tricky given the transformation of the outcome
+
+p2 <- vip(rf_final_fit, method = "permute", target = "price", metric = "rsquared", pred_wrapper = predict,
+          data = data_train) + 
+  ggtitle("rf, permutation")
+p2

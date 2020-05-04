@@ -51,7 +51,6 @@ rf_model <-
   rand_forest(mtry = tune()) %>% 
   set_mode("regression") %>% 
   set_engine("ranger")
-  # set_engine("ranger", importance = "impurity")
 
 # workflows ---------------------------------------------------------------
 
@@ -84,6 +83,7 @@ select_by_one_std_err(rf_search, mtry, degree, metric = "rmse", maximize = FALSE
 
 rf_param_final <- select_by_one_std_err(rf_search, mtry, degree, metric = "rmse", maximize = FALSE)
 
+# change model spec to include rf-specific variable importance metrics
 rf_model_importance <- 
   rand_forest(mtry = tune()) %>% 
   set_mode("regression") %>% 
@@ -122,9 +122,23 @@ p1 <- vip(rf_final_fit) +
   ggtitle("rf, model-based")
 p1
 
-# setting up model-agnostic vi might be tricky given the transformation of the outcome
+# setting up model-agnostic vip: seems to require:
+# explicit call to vi_permute
+# baked version of training data, since it's not in the fit object pulled from the workflow
+# pred_wrapper to specify newdata
 
-p2 <- vip(rf_final_fit, method = "permute", target = "price", metric = "rsquared", pred_wrapper = predict,
-          data = data_train) + 
+model_agnostic_vi <- vi_permute(rf_final_fit, target = "price", 
+    train = bake(model_recipe_prepped, new_data = data_train),
+    metric = "rsquared", pred_wrapper = function(object, newdata) predict(object, newdata))
+
+# doesn't work
+# model_agnostic_vi2 <- vi(rf_final_fit, method = "permute", target = "price", 
+#     train = bake(model_recipe_prepped, new_data = data_train),
+#     metric = "rsquared", pred_wrapper = function(object, newdata) predict(object, newdata),
+#     verbose = TRUE)
+
+p2 <- model_agnostic_vi %>% vip() + 
   ggtitle("rf, permutation")
 p2
+
+grid.arrange(p1, p2, ncol = 2)

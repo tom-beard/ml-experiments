@@ -120,25 +120,21 @@ metrics(data_test_transformed, truth = log_price, estimate = .pred)
 
 p1 <- vip(rf_final_fit) + 
   ggtitle("rf, model-based")
-p1
 
-# setting up model-agnostic vip: seems to require:
+# setting up model-agnostic vip seems to require:
 # explicit call to vi_permute
 # baked version of training data, since it's not in the fit object pulled from the workflow
 # pred_wrapper to specify newdata
 
-model_agnostic_vi <- vi_permute(rf_final_fit, target = "price", 
-    train = bake(model_recipe_prepped, new_data = data_train),
-    metric = "rsquared", pred_wrapper = function(object, newdata) predict(object, newdata))
-
-# doesn't work
-# model_agnostic_vi2 <- vi(rf_final_fit, method = "permute", target = "price", 
+# this doesn't work: vi uses vi.model_fit, which wraps the call to vi_permute and tries to extract object$fit first
+# model_agnostic_vi2 <- vi(rf_final_fit, method = "permute", target = "price",
 #     train = bake(model_recipe_prepped, new_data = data_train),
-#     metric = "rsquared", pred_wrapper = function(object, newdata) predict(object, newdata),
-#     verbose = TRUE)
+#     metric = "rsquared", pred_wrapper = function(object, newdata) predict(object, newdata))
 
-p2 <- model_agnostic_vi %>% vip() + 
+p2 <- vi_permute(rf_final_fit, target = "price", 
+                 train = bake(model_recipe_prepped, new_data = data_train), metric = "rsquared",
+                 pred_wrapper = function(object, newdata) predict(object, newdata)) %>%
+  vip() + 
   ggtitle("rf, permutation")
-p2
 
 grid.arrange(p1, p2, ncol = 2)

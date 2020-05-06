@@ -45,11 +45,11 @@ data_cleaned <- data_input %>%
 set.seed(42)
 
 # demo settings:
-test_prop <- 0.1
-folds <- 3
+# test_prop <- 0.1
+# folds <- 5
 # more realistic settings: 
-# test_prop <- 0.7
-# folds <- 10
+test_prop <- 0.7
+folds <- 10
 
 # set stratification, if required
 data_split <- initial_split(data_cleaned, prop = test_prop)
@@ -80,8 +80,6 @@ rf_model <-
   set_mode("regression") %>% 
   set_engine("ranger")
 
-# workflows ---------------------------------------------------------------
-
 rf_workflow <- 
   workflow() %>% 
   add_model(rf_model) %>% 
@@ -90,14 +88,16 @@ rf_workflow <-
 rf_param <- 
   rf_workflow %>% 
   parameters() %>% 
-  update(mtry = mtry(range = c(3L, 9L)))
+  update(mtry = mtry(range = c(3L, 11L)))
 
-rf_grid <- grid_regular(rf_param, levels = 7)
+rf_grid <- grid_regular(rf_param, levels = 9)
 
 plan(future::cluster, workers = cl)
 rf_search <- tune_grid(rf_workflow, grid = rf_grid, resamples = data_vfold,
                        param_info = rf_param)
 beepr::beep()
+
+# select best hyperparameters ---------------------------------------------
 
 rf_search %>% 
   autoplot(metric = "rmse")
@@ -116,3 +116,27 @@ rf_search %>%
                  colour = factor(mtry == best_1se))) +
   scale_colour_manual(values = c("TRUE" = "firebrick", "FALSE" = "grey50")) +
   theme(legend.position = "none")
+
+
+# finalise model and test predictions -------------------------------------------------------
+
+rf_param_final <- select_by_one_std_err(rf_search, mtry, metric = "rmse", maximize = FALSE)
+# rf_param_final <- best_1se
+
+# change model spec to include rf-specific variable importance metrics
+rf_model_importance <- 
+  rand_forest(mtry = tune()) %>% 
+  set_mode("regression") %>% 
+  set_engine("ranger", importance = "impurity")
+
+rf_workflow_final_fit <- rf_workflow %>%
+  update_model(rf_model_importance) %>% 
+  finalize_workflow(rf_param_final) %>%
+  fit(data = data_train)
+
+data_test %>% 
+  bind_cols(
+    predict(rf_workflow_final_fit, new_data = data_test)
+    ) %>% 
+  metrics(truth = hwy, estimate = .pred)
+

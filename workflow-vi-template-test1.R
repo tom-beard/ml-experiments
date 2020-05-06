@@ -193,3 +193,16 @@ grid.arrange(grobs = pdps, ncol = 5)
 
 # see https://bgreenwell.github.io/pdp/articles/pdp.html#multi-predictor-pdps
 
+# Compute partial dependence data for displ and cyl
+pd <- partial(rf_final_fit$fit, pred.var = c("displ", "cyl"),
+              train = bake(model_recipe_prepped, new_data = data_train))
+pdp1 <- plotPartial(pd)
+
+# Add contour lines and use a different color palette
+pdp2 <- plotPartial(pd, contour = TRUE,
+                    col.regions = colorRampPalette(c("red", "white", "blue")))
+
+pdp3 <- plotPartial(pd, levelplot = FALSE, zlab = "hwy", colorkey = TRUE, 
+                    screen = list(z = -45, x = -80))
+
+grid.arrange(pdp1, pdp2, pdp3, ncol = 3)

@@ -4,6 +4,7 @@ library(tidymodels)
 library(doFuture)
 library(xgboost)
 library(vip)
+library(pdp)
 
 all_cores <- parallel::detectCores(logical = FALSE) - 1
 registerDoFuture()
@@ -154,7 +155,7 @@ p1 <- rf_final_fit %>%
 # baked version of training data, since it's not in the fit object pulled from the workflow
 # pred_wrapper to specify newdata
 
-p2 <- rf_final_fit %>% 
+rf_vi_permute <- rf_final_fit %>% 
   vi_permute(
     train = bake(model_recipe_prepped, new_data = data_train),
     target = "hwy", 
@@ -162,9 +163,33 @@ p2 <- rf_final_fit %>%
     nsim = 10,
     keep = TRUE,
     pred_wrapper = function(object, newdata) predict(object, newdata)
-  ) %>%
+  )
+
+p2 <- rf_vi_permute %>%
   vip(all_permutations = TRUE, aesthetics = list(fill = "grey50")) + 
   ggtitle("rf, permutation")
 
 grid.arrange(p1, p2, ncol = 2)
+
+
+# partial dependence plots ------------------------------------------------
+
+features <- rf_vi_permute %>% top_n(10, wt = Importance) %>% pull(Variable)
+features <- rf_workflow_final_fit$fit$fit$preproc$x_var
+
+pdps <- lapply(features, FUN = function(feature) {
+  pd <- partial(rf_final_fit$fit, pred.var = feature,
+                train = bake(model_recipe_prepped, new_data = data_train))
+  autoplot(pd) + 
+    ylim(range(data_train$hwy)) +
+    geom_point()
+})
+grid.arrange(grobs = pdps, ncol = 5)
+
+# works okay, but labels are in baked units: how to we show these as raw?
+
+
+# interactions ------------------------------------------------------------
+
+# see https://bgreenwell.github.io/pdp/articles/pdp.html#multi-predictor-pdps
 

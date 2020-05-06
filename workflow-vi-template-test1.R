@@ -59,8 +59,11 @@ data_vfold <- vfold_cv(data_train, v = folds, repeats = 1)
 
 model_recipe <- 
   recipe(hwy ~ ., data = data_train) %>% 
-  update_role(model, new_role = "model id") %>% 
+  update_role(model, new_role = "quasi id") %>% 
   # need to explicitly specify recipes:: so that the functions can be found by parallel workers
-  step_log(recipes::all_outcomes()) %>%
   step_normalize(recipes::all_predictors(), -recipes::all_nominal()) %>% 
-  step_dummy(recipes::all_nominal())
+  step_dummy(recipes::all_nominal(), -has_role("quasi id")) # need to exclude ID-type columns
+
+# check recipe results (optional)
+model_recipe %>% summary()
+model_recipe %>% prep() %>% juice()

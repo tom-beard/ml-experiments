@@ -140,3 +140,31 @@ data_test %>%
     ) %>% 
   metrics(truth = hwy, estimate = .pred)
 
+# variable importance -----------------------------------------------------
+
+rf_final_fit <- pull_workflow_fit(rf_workflow_final_fit)
+model_recipe_prepped <- pull_workflow_prepped_recipe(rf_workflow_final_fit)
+
+p1 <- rf_final_fit %>% 
+  vip(aesthetics = list(fill = "grey50")) + 
+  ggtitle("rf, model-based")
+
+# setting up model-agnostic vip seems to require:
+# explicit call to vi_permute
+# baked version of training data, since it's not in the fit object pulled from the workflow
+# pred_wrapper to specify newdata
+
+p2 <- rf_final_fit %>% 
+  vi_permute(
+    train = bake(model_recipe_prepped, new_data = data_train),
+    target = "hwy", 
+    metric = "rsquared",
+    nsim = 10,
+    keep = TRUE,
+    pred_wrapper = function(object, newdata) predict(object, newdata)
+  ) %>%
+  vip(all_permutations = TRUE, aesthetics = list(fill = "grey50")) + 
+  ggtitle("rf, permutation")
+
+grid.arrange(p1, p2, ncol = 2)
+

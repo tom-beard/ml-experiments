@@ -211,20 +211,16 @@ grid.arrange(grobs = pdps, ncol = 5)
 # Compute partial dependence data for displ and cyl
 pd <- partial(rf_final_fit$fit, pred.var = c("displ", "cyl"),
               train = bake(model_recipe_prepped, new_data = data_train))
-pdp1 <- plotPartial(pd)
+pdp_heatmap <- plotPartial(pd, contour = TRUE)
 
-# Add contour lines and use a different color palette
-pdp2 <- plotPartial(pd, contour = TRUE,
-                    col.regions = colorRampPalette(c("red", "white", "blue")))
+pdp_3d <- plotPartial(pd, levelplot = FALSE, zlab = "hwy", colorkey = TRUE, 
+                    screen = list(z = 45, x = -35))
 
-pdp3 <- plotPartial(pd, levelplot = FALSE, zlab = "hwy", colorkey = TRUE, 
-                    screen = list(z = -45, x = -80))
-
-grid.arrange(pdp1, pdp2, pdp3, ncol = 3)
+grid.arrange(pdp_heatmap, pdp_3d, ncol = 2)
 
 
 # to do -------------------------------------------------------------------
 
-# look at last_fit()
+# more interaction analysis
 # bootstrap vs vfold?
 # version for classification, including npv/ppv as well as auc

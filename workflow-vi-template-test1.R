@@ -5,6 +5,7 @@ library(doFuture)
 library(xgboost)
 library(vip)
 library(pdp)
+library(forcats)
 
 all_cores <- parallel::detectCores(logical = FALSE) - 1
 registerDoFuture()
@@ -206,9 +207,32 @@ grid.arrange(grobs = pdps, ncol = 5)
 
 # interactions ------------------------------------------------------------
 
+# see https://koalaverse.github.io/vip/articles/vip-interaction.html 
+
+interactions_vi <- rf_final_fit$fit %>% 
+  vint(
+    feature_names = features,
+    parallel = TRUE,
+    train = bake(model_recipe_prepped, new_data = data_train))
+
+interactions_vi %>% 
+  dplyr::slice(1:10) %>% 
+  ggplot() +
+  geom_col(aes(x = fct_reorder(Variables, Interaction), y = Interaction)) +
+  coord_flip() +
+  labs(x = "", y = "Interaction strength", title = "Partial dependence")
+
+interactions_vi %>% 
+  separate(Variables, into = c("var_1", "var_2"), sep = "\\*") %>% 
+  ggplot() +
+  geom_tile(aes(x = var_1, y = var_2, fill = Interaction)) +
+  labs(x = "", y = "", title = "") +
+  theme_minimal() +
+  theme(panel.grid.minor = element_blank())
+
 # see https://bgreenwell.github.io/pdp/articles/pdp.html#multi-predictor-pdps
 
-# Compute partial dependence data for displ and cyl
+# Compute partial dependence data for two variables
 pd <- partial(rf_final_fit$fit, pred.var = c("displ", "cyl"),
               train = bake(model_recipe_prepped, new_data = data_train))
 pdp_heatmap <- plotPartial(pd, contour = TRUE)
@@ -221,6 +245,7 @@ grid.arrange(pdp_heatmap, pdp_3d, ncol = 2)
 
 # to do -------------------------------------------------------------------
 
-# more interaction analysis
+# more interaction analysis:
+#  https://bgreenwell.github.io/pdp/articles/pdp-example-xgboost.html
 # bootstrap vs vfold?
 # version for classification, including npv/ppv as well as auc

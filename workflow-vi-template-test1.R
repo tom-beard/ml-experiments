@@ -52,11 +52,14 @@ set.seed(42)
 test_prop <- 0.7
 folds <- 10
 
+# a good candidate for a snippet?
+
 # set stratification, if required
 data_split <- initial_split(data_cleaned, prop = test_prop)
 # data_split <- initial_split(data_cleaned, prop = test_prop, strata = hwy)
 data_train <- training(data_split)
 data_test <- testing(data_split)
+# when should we use folds rather than bootstraps?
 data_vfold <- vfold_cv(data_train, v = folds, repeats = 1)
 # data_vfold <- vfold_cv(data_train, v = folds, repeats = 1, strata = hwy)
 
@@ -119,27 +122,39 @@ rf_search %>%
   theme(legend.position = "none")
 
 
-# finalise model and test predictions -------------------------------------------------------
+# finalise model -------------------------------------------------------
 
 rf_param_final <- select_by_one_std_err(rf_search, mtry, metric = "rmse", maximize = FALSE)
 # rf_param_final <- best_1se
 
-# change model spec to include rf-specific variable importance metrics
+# optional: change model spec to include rf-specific variable importance metrics
 rf_model_importance <- 
   rand_forest(mtry = tune()) %>% 
   set_mode("regression") %>% 
   set_engine("ranger", importance = "impurity")
 
-rf_workflow_final_fit <- rf_workflow %>%
+rf_workflow_finalized <- rf_workflow %>%
   update_model(rf_model_importance) %>% 
-  finalize_workflow(rf_param_final) %>%
+  finalize_workflow(rf_param_final)
+
+# test predictions -------------------------------------------------------
+
+rf_workflow_final_fit <- rf_workflow_finalized %>%
   fit(data = data_train)
 
 data_test %>% 
-  bind_cols(
-    predict(rf_workflow_final_fit, new_data = data_test)
-    ) %>% 
+  bind_cols(predict(rf_workflow_final_fit, new_data = data_test)) %>% 
   metrics(truth = hwy, estimate = .pred)
+
+# could use tune::last_fit() instead
+# more concise, but doesn't return predictions joined to all cols of full test set
+# also, to get the final fit and prepped recipes for vip, need to do
+# rf_workflow_last_fit$.workflow[[1]]
+
+rf_workflow_last_fit <- rf_workflow_finalized %>%
+  last_fit(data_split, metrics = metric_set(rmse, rsq, mae))
+
+rf_workflow_last_fit %>% collect_metrics()
 
 # variable importance -----------------------------------------------------
 
@@ -206,3 +221,10 @@ pdp3 <- plotPartial(pd, levelplot = FALSE, zlab = "hwy", colorkey = TRUE,
                     screen = list(z = -45, x = -80))
 
 grid.arrange(pdp1, pdp2, pdp3, ncol = 3)
+
+
+# to do -------------------------------------------------------------------
+
+# look at last_fit()
+# bootstrap vs vfold?
+# version for classification, including npv/ppv as well as auc

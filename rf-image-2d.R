@@ -1,7 +1,9 @@
 # init --------
 
+library(tidyverse)
 library(tidymodels)
 library(doFuture)
+library(ambient)
 
 all_cores <- parallel::detectCores(logical = FALSE) - 1
 registerDoFuture()
@@ -13,13 +15,22 @@ theme_set(theme_minimal())
 
 # get data ----------------------------------------------------------------
 
-data_input <- 
+grid_res <- 30
+
+data_input <- long_grid(seq(1, 10, length.out = grid_res),
+                        seq(1, 10, length.out = grid_res)) %>% 
+  mutate(lum = (gen_spheres(x, y, frequency = 0.2) + 1) / 2 )
+
 
 # eda ---------------------------------------------------------------------
 
-data_input %>% 
-  skimr::skim()
-
+data_input %>% plot(lum)
+data_input %>%
+  ggplot() +
+  geom_histogram(aes(x = lum))
+data_input %>%
+  ggplot() +
+  geom_tile(aes(x = x, y = y, fill = lum))
 
 # data cleaning -----------------------------------------------------------
 

@@ -42,7 +42,7 @@ data_cleaned <- data_input %>% as_tibble()
 set.seed(42)
 
 test_prop <- 0.7
-folds <- 10
+folds <- 2
 
 data_split <- initial_split(data_cleaned, prop = test_prop)
 data_train <- training(data_split)
@@ -71,42 +71,21 @@ rf_grid <- grid_regular(rf_param, levels = c(2L, 5L))
 
 plan(future::cluster, workers = cl)
 rf_search <- tune_grid(rf_workflow, grid = rf_grid, resamples = data_vfold,
-                       param_info = rf_param)
+                       param_info = rf_param,
+                       control = control_grid(extract = function (x) extract_model(x)))
 beepr::beep()
 
-# select best hyperparameters ---------------------------------------------
+# visualise all fits from grid ----------------------------------------------
 
-rf_search %>% 
-  autoplot(metric = "rmse")
+test_extract <- rf_search$.extracts[[1]]
 
-show_best(rf_search, metric = "rmse", n = 9, maximize = FALSE)
+test_extract[1, ".extracts"][[1]][[1]] %>% class()
+test_fit <- test_extract[1, ".extracts"][[1]][[1]]
 
-# finalise model -------------------------------------------------------
-
-rf_param_final <- select_by_one_std_err(rf_search, mtry, metric = "rmse", maximize = FALSE)
-
-rf_workflow_finalized <- rf_workflow %>%
-  finalize_workflow(rf_param_final)
-
-# test predictions -------------------------------------------------------
-
-rf_workflow_final_fit <- rf_workflow_finalized %>%
-  fit(data = data_train)
-
-data_test %>% 
-  bind_cols(predict(rf_workflow_final_fit, new_data = data_test)) %>% 
-  metrics(truth = lum, estimate = .pred)
-
-rf_workflow_last_fit <- rf_workflow_finalized %>%
-  last_fit(data_split, metrics = metric_set(rmse, rsq, mae))
-
-rf_workflow_last_fit %>% collect_metrics()
-
-
-# visualise predictions ---------------------------------------------------
+test_preds <- predict(test_fit, data = data_cleaned)$predictions
 
 predicted <- data_cleaned %>% 
-  bind_cols(predict(rf_workflow_final_fit, new_data = .)) %>% 
+  add_column(.pred = test_preds) %>% 
   mutate(residual = lum - .pred)
 
 plot_pred <- predicted %>% 
@@ -123,4 +102,3 @@ plot_residual <- predicted %>%
   coord_equal()
 
 grid.arrange(plot_pred, plot_residual, nrow = 1)
-

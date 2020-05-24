@@ -79,10 +79,14 @@ beepr::beep()
 
 test_extract <- rf_search$.extracts[[1]]
 
-test_extract[1, ".extracts"][[1]][[1]] %>% class()
 test_fit <- test_extract[1, ".extracts"][[1]][[1]]
-
 test_preds <- predict(test_fit, data = data_cleaned)$predictions
+
+test2 <- 
+test_extract %>% 
+  mutate(this_model = map(.extracts, 0))
+
+test2[1, ]
 
 predicted <- data_cleaned %>% 
   add_column(.pred = test_preds) %>% 

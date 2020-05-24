@@ -4,6 +4,7 @@ library(tidyverse)
 library(tidymodels)
 library(doFuture)
 library(ambient)
+library(gridExtra)
 
 all_cores <- parallel::detectCores(logical = FALSE) - 1
 registerDoFuture()
@@ -105,18 +106,21 @@ rf_workflow_last_fit %>% collect_metrics()
 # visualise predictions ---------------------------------------------------
 
 predicted <- data_cleaned %>% 
-  bind_cols(predict(rf_workflow_final_fit, new_data = .))
+  bind_cols(predict(rf_workflow_final_fit, new_data = .)) %>% 
+  mutate(residual = lum - .pred)
 
-predicted %>% 
+plot_pred <- predicted %>% 
   ggplot() +
   geom_tile(aes(x = x, y = y, fill = .pred)) +
   scale_y_reverse() +
   coord_equal()
 
-predicted %>% 
+plot_residual <- predicted %>% 
   ggplot() +
-  geom_tile(aes(x = x, y = y, fill = .pred - lum)) +
+  geom_tile(aes(x = x, y = y, fill = residual)) +
   scale_fill_gradient2() +
   scale_y_reverse() +
   coord_equal()
+
+grid.arrange(plot_pred, plot_residual, nrow = 1)
 

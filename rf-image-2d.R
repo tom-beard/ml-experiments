@@ -96,13 +96,27 @@ data_test %>%
   bind_cols(predict(rf_workflow_final_fit, new_data = data_test)) %>% 
   metrics(truth = lum, estimate = .pred)
 
-# could use tune::last_fit() instead
-# more concise, but doesn't return predictions joined to all cols of full test set
-# also, to get the final fit and prepped recipes for vip, need to do
-# rf_workflow_last_fit$.workflow[[1]]
-
 rf_workflow_last_fit <- rf_workflow_finalized %>%
   last_fit(data_split, metrics = metric_set(rmse, rsq, mae))
 
 rf_workflow_last_fit %>% collect_metrics()
+
+
+# visualise predictions ---------------------------------------------------
+
+predicted <- data_cleaned %>% 
+  bind_cols(predict(rf_workflow_final_fit, new_data = .))
+
+predicted %>% 
+  ggplot() +
+  geom_tile(aes(x = x, y = y, fill = .pred)) +
+  scale_y_reverse() +
+  coord_equal()
+
+predicted %>% 
+  ggplot() +
+  geom_tile(aes(x = x, y = y, fill = .pred - lum)) +
+  scale_fill_gradient2() +
+  scale_y_reverse() +
+  coord_equal()
 

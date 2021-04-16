@@ -1,0 +1,20 @@
+---
+title: "Exploring the Train dataset"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(mlogit)
+```
+
+## Look at Train dataset
+
+
+```{r train1}
+data("Train")
+train_choice_data <- Train
+train_choice_data %>% glimpse()
+```
+

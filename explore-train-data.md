@@ -101,3 +101,46 @@ train_choice_data %>%
 ![](explore-train-data_files/figure-markdown_github/pps2-1.png)
 
 There's not much difference.
+
+## Data management with mlogit
+
+From <https://cran.r-project.org/web/packages/mlogit/vignettes/c2.formula.data.html>.
+
+``` r
+Tr <- train_choice_data %>% 
+  mutate(choiceid = row_number()) %>% 
+  dfidx(shape = "wide", varying = 4:11, sep = "_",
+        idx = list(c("choiceid", "id")),
+        idnames = c(NA, "alt")) %>% 
+  mutate(price = price/ 100 * 2.20371, time = time / 60)
+Tr
+```
+
+    ## # A tibble: 5,858 x 6
+    ##    choice price  time change comfort idx$choiceid   $id $alt 
+    ##  * <fct>  <dbl> <dbl>  <dbl>   <dbl>        <int> <int> <fct>
+    ##  1 A       52.9  2.5       0       1            1     1 A    
+    ##  2 A       88.1  2.5       0       1            1     1 B    
+    ##  3 A       52.9  2.5       0       1            2     1 A    
+    ##  4 A       70.5  2.17      0       1            2     1 B    
+    ##  5 A       52.9  1.92      0       1            3     1 A    
+    ##  6 A       88.1  1.92      0       0            3     1 B    
+    ##  7 B       88.1  2.17      0       1            4     1 A    
+    ##  8 B       70.5  2.5       0       0            4     1 B    
+    ##  9 B       52.9  2.5       0       1            5     1 A    
+    ## 10 B       70.5  2.5       0       0            5     1 B    
+    ## # ... with 5,848 more rows
+    ## 
+    ## ~~~ indexes ~~~~
+    ##    choiceid id alt
+    ## 1         1  1   A
+    ## 2         1  1   B
+    ## 3         2  1   A
+    ## 4         2  1   B
+    ## 5         3  1   A
+    ## 6         3  1   B
+    ## 7         4  1   A
+    ## 8         4  1   B
+    ## 9         5  1   A
+    ## 10        5  1   B
+    ## indexes:  1, 1, 2

@@ -57,3 +57,18 @@ train_choice_data %>%
 ```
 
 There's not much difference.
+
+## Data management with mlogit
+
+From https://cran.r-project.org/web/packages/mlogit/vignettes/c2.formula.data.html.
+
+```{r}
+Tr <- train_choice_data %>% 
+  mutate(choiceid = row_number()) %>% 
+  dfidx(shape = "wide", varying = 4:11, sep = "_",
+        idx = list(c("choiceid", "id")),
+        idnames = c(NA, "alt")) %>% 
+  mutate(price = price/ 100 * 2.20371, time = time / 60)
+Tr
+```
+

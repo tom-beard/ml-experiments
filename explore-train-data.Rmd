@@ -27,3 +27,33 @@ train_choice_data %>%
   theme(panel.grid.minor = element_blank())
 ```
 
+## Look at Predictive Power Score
+
+From https://github.com/paulvanderlaken/ppsr:
+
+"the Predictive Power Score (PPS)...is an asymmetric, data-type-agnostic score that can detect linear or non-linear relationships between two variables. The score ranges from 0 (no predictive power) to 1 (perfect predictive power).
+
+The general concept of PPS is useful for data exploration purposes, in the same way correlation analysis is."
+
+```{r pps}
+library(ppsr)
+score_df(train_choice_data) %>% glimpse()
+train_choice_data %>% 
+  select(-ends_with("id")) %>% 
+  visualize_pps(do_parallel = TRUE)
+train_choice_data %>% 
+  select(-ends_with("id")) %>% 
+  visualize_correlations()
+
+```
+
+It's possible that the default algorithm (decision tree) isn't finding good splits. Try GLM instead.
+
+```{r pps2}
+train_choice_data %>% 
+  select(-ends_with("id")) %>% 
+  visualize_pps(algorithm = "glm", do_parallel = TRUE)
+
+```
+
+There's not much difference.

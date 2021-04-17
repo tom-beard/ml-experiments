@@ -1,11 +1,11 @@
 Exploring the Train dataset
 ================
 
-## Look at Train dataset
+## First look at Train dataset
 
 ``` r
 data("Train")
-train_choice_data <- Train
+train_choice_data <- Train %>% as_tibble()
 train_choice_data %>% glimpse()
 ```
 
@@ -22,3 +22,82 @@ train_choice_data %>% glimpse()
     ## $ time_B    <dbl> 150, 130, 115, 150, 150, 130, 115, 150, 130, 115, 121, 93...
     ## $ change_B  <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ...
     ## $ comfort_B <dbl> 1, 1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, ...
+
+``` r
+train_choice_data %>%
+  select(where(is.numeric)) %>% 
+  select(-ends_with("id")) %>% 
+  vis_cor()
+```
+
+![](explore-train-data_files/figure-markdown_github/train1-1.png)
+
+``` r
+train_choice_data %>%
+  ggplot() +
+  geom_point(aes(x = price_A, y = price_B, colour = choice), alpha = 0.2) +
+  theme_minimal() +
+  theme(panel.grid.minor = element_blank())
+```
+
+![](explore-train-data_files/figure-markdown_github/train1-2.png)
+
+## Look at Predictive Power Score
+
+From <https://github.com/paulvanderlaken/ppsr>:
+
+"the Predictive Power Score (PPS)...is an asymmetric, data-type-agnostic score that can detect linear or non-linear relationships between two variables. The score ranges from 0 (no predictive power) to 1 (perfect predictive power).
+
+The general concept of PPS is useful for data exploration purposes, in the same way correlation analysis is."
+
+``` r
+library(ppsr)
+```
+
+    ## Warning: package 'ppsr' was built under R version 4.0.5
+
+``` r
+score_df(train_choice_data) %>% glimpse()
+```
+
+    ## Rows: 121
+    ## Columns: 11
+    ## $ x              <chr> "id", "choiceid", "choice", "price_A", "time_A", "ch...
+    ## $ y              <chr> "id", "id", "id", "id", "id", "id", "id", "id", "id"...
+    ## $ result_type    <chr> "predictor and target are the same", "predictive pow...
+    ## $ pps            <dbl> 1.0000000000, 0.0000000000, 0.0000000000, 0.01624525...
+    ## $ metric         <chr> NA, "MAE", "MAE", "MAE", "MAE", "MAE", "MAE", "MAE",...
+    ## $ baseline_score <dbl> NA, 58.6809026, 58.6809026, 58.6809026, 58.6809026, ...
+    ## $ model_score    <dbl> NA, 58.6809026, 58.6809026, 57.7260745, 58.6809026, ...
+    ## $ cv_folds       <dbl> NA, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, NA, 5, 5, 5, 5,...
+    ## $ seed           <dbl> NA, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, NA, 1, 1, 1, 1,...
+    ## $ algorithm      <chr> NA, "tree", "tree", "tree", "tree", "tree", "tree", ...
+    ## $ model_type     <chr> NA, "regression", "regression", "regression", "regre...
+
+``` r
+train_choice_data %>% 
+  select(-ends_with("id")) %>% 
+  visualize_pps(do_parallel = TRUE)
+```
+
+![](explore-train-data_files/figure-markdown_github/pps-1.png)
+
+``` r
+train_choice_data %>% 
+  select(-ends_with("id")) %>% 
+  visualize_correlations()
+```
+
+![](explore-train-data_files/figure-markdown_github/pps-2.png)
+
+It's possible that the default algorithm (decision tree) isn't finding good splits. Try GLM instead.
+
+``` r
+train_choice_data %>% 
+  select(-ends_with("id")) %>% 
+  visualize_pps(algorithm = "glm", do_parallel = TRUE)
+```
+
+![](explore-train-data_files/figure-markdown_github/pps2-1.png)
+
+There's not much difference.

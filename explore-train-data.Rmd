@@ -7,14 +7,23 @@ output: github_document
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(mlogit)
+library(visdat)
 ```
 
-## Look at Train dataset
-
+## First look at Train dataset
 
 ```{r train1}
 data("Train")
-train_choice_data <- Train
+train_choice_data <- Train %>% as_tibble()
 train_choice_data %>% glimpse()
+train_choice_data %>%
+  select(where(is.numeric)) %>% 
+  select(-ends_with("id")) %>% 
+  vis_cor()
+train_choice_data %>%
+  ggplot() +
+  geom_point(aes(x = price_A, y = price_B, colour = choice), alpha = 0.2) +
+  theme_minimal() +
+  theme(panel.grid.minor = element_blank())
 ```
 

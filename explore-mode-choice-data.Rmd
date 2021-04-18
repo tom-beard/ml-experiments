@@ -1,5 +1,5 @@
 ---
-title: "Exploring the Train dataset"
+title: "Exploring mode choice datasets"
 output: github_document
 ---
 
@@ -9,6 +9,8 @@ library(tidyverse)
 library(mlogit)
 library(visdat)
 ```
+
+Getting to grips with the transport mode datasets in the [mlogit](https://cran.r-project.org/web/packages/mlogit/) package.
 
 ## First look at Train dataset
 

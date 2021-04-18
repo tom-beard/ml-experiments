@@ -1,5 +1,7 @@
-Exploring the Train dataset
+Exploring mode choice datasets
 ================
+
+Getting to grips with the transport mode datasets in the [mlogit](https://cran.r-project.org/web/packages/mlogit/) package.
 
 ## First look at Train dataset
 
@@ -30,7 +32,7 @@ train_choice_data %>%
   vis_cor()
 ```
 
-![](explore-train-data_files/figure-markdown_github/train1-1.png)
+![](explore-mode-choice-data_files/figure-markdown_github/train1-1.png)
 
 ``` r
 train_choice_data %>%
@@ -40,7 +42,7 @@ train_choice_data %>%
   theme(panel.grid.minor = element_blank())
 ```
 
-![](explore-train-data_files/figure-markdown_github/train1-2.png)
+![](explore-mode-choice-data_files/figure-markdown_github/train1-2.png)
 
 ## Look at Predictive Power Score
 
@@ -80,7 +82,7 @@ train_choice_data %>%
   visualize_pps(do_parallel = TRUE)
 ```
 
-![](explore-train-data_files/figure-markdown_github/pps-1.png)
+![](explore-mode-choice-data_files/figure-markdown_github/pps-1.png)
 
 ``` r
 train_choice_data %>% 
@@ -88,7 +90,7 @@ train_choice_data %>%
   visualize_correlations()
 ```
 
-![](explore-train-data_files/figure-markdown_github/pps-2.png)
+![](explore-mode-choice-data_files/figure-markdown_github/pps-2.png)
 
 It's possible that the default algorithm (decision tree) isn't finding good splits. Try GLM instead.
 
@@ -98,7 +100,7 @@ train_choice_data %>%
   visualize_pps(algorithm = "glm", do_parallel = TRUE)
 ```
 
-![](explore-train-data_files/figure-markdown_github/pps2-1.png)
+![](explore-mode-choice-data_files/figure-markdown_github/pps2-1.png)
 
 There's not much difference.
 

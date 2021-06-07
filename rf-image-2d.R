@@ -3,8 +3,13 @@
 library(tidyverse)
 library(tidymodels)
 library(doFuture)
+library(parallel)
 library(ambient)
 library(gridExtra)
+library(imager)
+library(fs)
+
+source(here::here("..", "library", "vis-functions.R"))
 
 all_cores <- parallel::detectCores(logical = FALSE) - 1
 registerDoFuture()
@@ -13,15 +18,26 @@ cl <- makeCluster(all_cores)
 
 theme_set(theme_minimal())
 
+# build test data ---------------------------------------------------------
 
-# get data ----------------------------------------------------------------
-
-grid_res <- 30
+grid_res <- 400
 
 data_input <- long_grid(seq(1, 10, length.out = grid_res),
                         seq(1, 10, length.out = grid_res)) %>% 
   mutate(lum = (gen_spheres(x, y, frequency = 0.2) + 1) / 2 )
 
+# get image data ----------------------------------------------------------------
+
+img_path <- path("D:", "pictures", "Tom", "twitter-profile-400x400.jpg")
+im <- load.image(img_path)
+plot(im)
+
+data_input <- im %>% 
+  grayscale() %>% 
+  resize(size_x = grid_res, size_y = grid_res, interpolation_type = 5) %>% 
+  as.data.frame() %>% 
+  as_tibble() %>% 
+  rename(lum = value)
 
 # eda ---------------------------------------------------------------------
 
@@ -31,7 +47,8 @@ data_input %>%
   geom_histogram(aes(x = lum))
 data_input %>%
   ggplot() +
-  geom_tile(aes(x = x, y = y, fill = lum))
+  geom_tile(aes(x = x, y = y, fill = lum)) +
+  coord_fixed()
 
 # data cleaning -----------------------------------------------------------
 
@@ -79,14 +96,8 @@ beepr::beep()
 
 test_extract <- rf_search$.extracts[[1]]
 
-test_fit <- test_extract[1, ".extracts"][[1]][[1]]
+test_fit <- test_extract[10, ".extracts"][[1]][[1]]
 test_preds <- predict(test_fit, data = data_cleaned)$predictions
-
-test2 <- 
-test_extract %>% 
-  mutate(this_model = map(.extracts, 0))
-
-test2[1, ]
 
 predicted <- data_cleaned %>% 
   add_column(.pred = test_preds) %>% 
@@ -100,9 +111,16 @@ plot_pred <- predicted %>%
 
 plot_residual <- predicted %>% 
   ggplot() +
-  geom_tile(aes(x = x, y = y, fill = residual)) +
-  scale_fill_gradient2() +
+  geom_tile(aes(x = x, y = y, fill = abs(residual)^(1/8))) +
+  scale_fill_viridis_c(option = "A") +
   scale_y_reverse() +
   coord_equal()
 
 grid.arrange(plot_pred, plot_residual, nrow = 1)
+
+plot_residual +
+  theme_void() +
+  theme(legend.position = "none")
+
+ggsave_cairo(path(str_glue("tom-rf-{grid_res}x{grid_res}.png")),
+             width = grid_res %/% 100, height = grid_res %/% 100)

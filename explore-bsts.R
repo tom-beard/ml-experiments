@@ -10,7 +10,7 @@ library(bsts)
 data(iclaims)
 initial.claims # a zoo object
 
-y <- initial.claims$iclaimsNSA # the series that we're modelling
+y <- initial.claims$iclaimsNSA # the series that we're modelling; it's already been transformed(?!)
 
 
 # define & fit model ------------------------------------------------------
@@ -24,7 +24,7 @@ View(ss)
 model1 <- bsts(y,
                state.specification = ss,
                niter = 1000) # takes ~35s on my laptop
-# if you  pass a full zoo or ts object, the timeseries info can be used in plotting etc
+# if you pass a full zoo or ts object, the timeseries info can be used in plotting etc
 
 # examine model results ---------------------------------------------------
 
@@ -36,7 +36,7 @@ model1$sigma.obs %>% str()
 model1$state.specification %>% View()
 
 plot(model1) # same as plot(model1, "state")
-plot(model1, "components")
+?plot(model1, "components")
 plot(model1, "residuals")
 plot(model1, "coefficients") # only if regressors are specified
 plot(model1, "seasonal") # figure margins too large
@@ -74,5 +74,30 @@ pred1 <- predict.bsts(model1, horizon = 12)
 View(pred1)
 
 plot(pred1, plot.original = 156)
+
+
+# test with zeroes and NAs ------------------------------------------------
+
+y_2 <- pmax(initial.claims$iclaimsNSA, 0)
+y_2[300:320] <- NA
+
+plot(y_2)
+
+ss_2 <- list() %>% 
+  AddLocalLinearTrend(y_2) %>%
+  AddSeasonal(y_2, nseasons = 52)
+
+View(ss_2)
+
+model_2 <- bsts(y_2,
+               state.specification = ss_2,
+               niter = 1000) # takes ~35s on my laptop
+View(model_2)
+
+plot(model_2)
+plot(model_2, show.actuals = TRUE)
+plot(model_2, "components")
+
+# this produces results, but has a somewhat "forced" trend where there are zeroes
 
 

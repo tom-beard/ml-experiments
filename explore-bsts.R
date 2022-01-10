@@ -24,6 +24,7 @@ View(ss)
 model1 <- bsts(y,
                state.specification = ss,
                niter = 1000) # takes ~35s on my laptop
+# if you  pass a full zoo or ts object, the timeseries info can be used in plotting etc
 
 # examine model results ---------------------------------------------------
 
@@ -41,6 +42,31 @@ plot(model1, "coefficients") # only if regressors are specified
 plot(model1, "seasonal") # figure margins too large
 plot(model1, "prediction.errors")
 
+
+# extracting and visualising results --------------------------------------
+
+# based on https://michaeldewittjr.com/programming/2018-07-05-bayesian-time-series-analysis-with-bsts_files/
+# this could be made much more tidyverse-y!
+
+length(model1$state.specification) # 2 components
+comp_1_name <- model1$state.specification[[1]]$name
+comp_2_name <- model1$state.specification[[2]]$name
+
+times <- as.Date(model1$timestamp.info$timestamps)
+
+components_df <- bind_rows(
+  tibble(component = comp_1_name, date = times, value = colMeans(model1$state.contributions[, comp_1_name, ])),
+  tibble(component = comp_2_name, date = times, value = colMeans(model1$state.contributions[, comp_2_name, ]))
+)
+
+components_df %>% 
+  ggplot(aes(x = date, y = value)) +
+  geom_line() + 
+  theme_bw() +
+  ylab("") + xlab("") + 
+  facet_grid(rows = vars(component), scales = "free") +
+  theme(legend.title = element_blank()) +
+  theme(axis.text.x = element_text(angle = -90, hjust = 0))
 
 # predictions -------------------------------------------------------------
 

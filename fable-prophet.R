@@ -1,3 +1,5 @@
+# intro -------------------------------------------------------------------
+
 # based on https://otexts.com/fpp3/prophet.html
 # though that page doesn't specify packages to load
 
@@ -24,3 +26,33 @@ fit <- train %>%
 fc <- fit %>% forecast(h = "2 years 6 months")
 fc %>% autoplot(cement)
 fc %>% accuracy(cement)
+
+
+# CRAN vignette -----------------------------------------------------------
+
+# based on https://cran.r-project.org/web/packages/fable.prophet/vignettes/intro.html,
+# but adapted to the Cement example
+
+# components() creates a "dable" object (Decomposition table?)
+
+fit %>%
+  select(-arima) %>% # no components() method for ARIMA models
+  components() %>% 
+  autoplot() # ets doesn't throw an error, but is overplotted
+
+fit %>%
+  select(ets) %>%
+  components() %>% 
+  autoplot()
+
+fit %>%
+  select(prophet) %>%
+  components() %>% 
+  autoplot()
+
+
+# get fitted values -------------------------------------------------------
+
+fit %>%
+  select(prophet) %>%
+  fitted()

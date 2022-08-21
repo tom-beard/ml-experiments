@@ -7,9 +7,8 @@ library(vip)
 
 all_cores <- parallel::detectCores(logical = FALSE) - 1
 registerDoFuture()
-cl <- makeCluster(all_cores)
+cl <- parallel::makeCluster(all_cores)
 # note: if parallel processing isn't working, use plan(sequential) to revert to sequential
-
 
 theme_set(theme_light())
 
@@ -35,7 +34,7 @@ data_test <- testing(data_split)
 # depends on data structure and variable names
 data_vfold <- vfold_cv(data_train, v = folds, repeats = 1, strata = price)
 
-# feature engineering (including tuneable step) --------------------------
+# feature engineering (including tunable step) --------------------------
 
 model_recipe <- 
   recipe(price ~ ., data = data_train) %>% 
@@ -65,6 +64,9 @@ rf_param <-
   update(mtry = mtry(range = c(3L, 5L)),
          degree = degree_int(range = c(2L, 4L)))
 
+# note: `parameters.workflow()` was deprecated in tune 0.1.6.9003.
+# Please use `hardhat::extract_parameter_set_dials()` instead. 
+
 rf_grid <- grid_regular(rf_param, levels = 3)
 
 plan(future::cluster, workers = cl)
@@ -74,14 +76,14 @@ beepr::beep()
 
 rf_search %>% 
   autoplot(metric = "rmse")
-show_best(rf_search, metric = "rmse", n = 9, maximize = FALSE)
-select_best(rf_search, metric = "rmse", maximize = FALSE)
-select_by_one_std_err(rf_search, mtry, degree, metric = "rmse", maximize = FALSE)
+show_best(rf_search, metric = "rmse", n = 9)
+select_best(rf_search, metric = "rmse")
+select_by_one_std_err(rf_search, mtry, degree, metric = "rmse")
 
 
 # final predictions -------------------------------------------------------
 
-rf_param_final <- select_by_one_std_err(rf_search, mtry, degree, metric = "rmse", maximize = FALSE)
+rf_param_final <- select_by_one_std_err(rf_search, mtry, degree, metric = "rmse")
 
 # change model spec to include rf-specific variable importance metrics
 rf_model_importance <- 
@@ -104,8 +106,8 @@ rf_workflow_final_fit <- rf_workflow %>%
 # data set together with the extracted model can then be used for the final
 # predictions.
 
-model_recipe_prepped <- pull_workflow_prepped_recipe(rf_workflow_final_fit)
-rf_final_fit <- pull_workflow_fit(rf_workflow_final_fit)
+model_recipe_prepped <- extract_recipe(rf_workflow_final_fit)
+rf_final_fit <- extract_fit_parsnip(rf_workflow_final_fit)
 
 data_test_transformed <- predict(rf_final_fit, new_data = bake(model_recipe_prepped, data_test)) %>% 
   bind_cols(data_test) %>% 

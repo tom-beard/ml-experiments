@@ -41,7 +41,7 @@ data_input <- im %>%
 
 # eda ---------------------------------------------------------------------
 
-data_input %>% plot(lum)
+# data_input %>% plot(lum)
 data_input %>%
   ggplot() +
   geom_histogram(aes(x = lum))
@@ -91,6 +91,8 @@ rf_search <- tune_grid(rf_workflow, grid = rf_grid, resamples = data_vfold,
                        param_info = rf_param,
                        control = control_grid(extract = function (x) extract_model(x)))
 beepr::beep()
+
+# note: `extract_model()` was deprecated in tune 0.1.6. Please use `extract_fit_engine()` instead.
 
 # visualise all fits from grid ----------------------------------------------
 

@@ -4,12 +4,13 @@ format: html
 editor: visual
 ---
 
-## Basic tidymodels
+# Basic LM with tidymodels
 
 Loosely based on <https://sta-363-s20.lucymcgowan.com/slides/12-tidymodels.html#1>.
 
 ```{r}
 library(tidymodels)
+library(glmnet)
 
 car_data <- mtcars
 
@@ -47,3 +48,91 @@ results_hpsq %>% collect_metrics()
 
 ```
 
+## Recipes
+
+```{r}
+car_recipe <-
+  recipe(mpg ~ hp + disp + wt, data = car_data) %>% 
+  step_scale(all_predictors())
+
+results_scaled <- fit_resamples(lm_spec,
+                                preprocessor = car_recipe,
+                                resamples = car_cv)
+
+results_scaled %>% 
+  collect_metrics()
+```
+
+# Elastic net
+
+```{r}
+ridge_spec <- linear_reg(penalty = 100, mixture = 0) %>% 
+  set_engine("glmnet")
+
+results_ridge <- fit_resamples(ridge_spec,
+                               preprocessor = car_recipe,
+                               resamples = car_cv)
+results_ridge %>% collect_metrics()
+```
+
+Now to tune the hyperparameters.
+
+```{r}
+penalised_spec <- linear_reg(penalty = tune(), mixture = tune()) %>% 
+  set_engine("glmnet")
+
+grid_elastic <- expand.grid(penalty = seq(0, 100, by = 10),
+                            mixture = seq(0, 1, by = 0.2))
+
+results_penalised <- tune_grid(penalised_spec,
+                               preprocessor = car_recipe,
+                               grid = grid_elastic,
+                               resamples = car_cv)
+
+results_penalised %>%
+  collect_metrics() %>% 
+  filter(.metric == "rmse") %>% 
+  arrange(mean)
+```
+
+```{r}
+results_penalised %>%
+  collect_metrics() %>%
+  filter(.metric == "rmse") %>%
+  ggplot(aes(penalty, mean, color = factor(mixture), group = factor(mixture))) +
+  geom_line() +
+  geom_point() + 
+  labs(y = "RMSE")
+```
+Variation: add a useless predictor to see whether penalisation helps with that.
+
+```{r}
+car_data_2 <- car_data %>% 
+  mutate(meaningless = runif(n()))
+
+car_recipe_2 <-
+  recipe(mpg ~ hp + disp + wt + meaningless, data = car_data_2) %>% 
+  step_scale(all_predictors())
+
+car_cv_2 <- vfold_cv(car_data_2, v = 5)
+
+results_penalised_2 <- tune_grid(penalised_spec,
+                               preprocessor = car_recipe_2,
+                               grid = grid_elastic,
+                               resamples = car_cv_2)
+
+results_penalised_2 %>% 
+  collect_metrics() %>% 
+  filter(.metric == "rmse") %>% 
+  arrange(mean)
+
+results_penalised_2 %>%
+  collect_metrics() %>%
+  filter(.metric == "rmse") %>%
+  ggplot(aes(penalty, mean, color = factor(mixture), group = factor(mixture))) +
+  geom_line() +
+  geom_point() + 
+  labs(y = "RMSE")
+```
+
+Seems to make no difference.

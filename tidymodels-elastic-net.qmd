@@ -1,0 +1,49 @@
+---
+title: "Elastic net with tidymodels"
+format: html
+editor: visual
+---
+
+## Basic tidymodels
+
+Loosely based on <https://sta-363-s20.lucymcgowan.com/slides/12-tidymodels.html#1>.
+
+```{r}
+library(tidymodels)
+
+car_data <- mtcars
+
+lm_spec <- 
+  linear_reg() %>% 
+  set_engine(engine = "lm")
+
+set.seed(100)
+car_split <- car_data %>% 
+  initial_split(prop = 0.5)
+
+# using last_fit() as a shortcut
+lm_fit <- last_fit(lm_spec,
+              mpg ~ hp,
+              split = car_split)
+
+lm_fit %>% 
+  collect_metrics()
+```
+
+## Using cross validation
+
+```{r}
+car_cv <- vfold_cv(car_data, v = 5)
+
+results <- fit_resamples(lm_spec,
+              mpg ~ hp,
+              resamples = car_cv)
+results %>% collect_metrics()
+
+results_hpsq <- fit_resamples(lm_spec,
+              mpg ~ hp + I(hp ^ 2),
+              resamples = car_cv)
+results_hpsq %>% collect_metrics()
+
+```
+

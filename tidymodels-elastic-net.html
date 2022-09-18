@@ -117,9 +117,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 </header>
 
-<section id="basic-lm-with-tidymodels" class="level1">
-<h1>Basic LM with tidymodels</h1>
-<p>Loosely based on <a href="https://sta-363-s20.lucymcgowan.com/slides/12-tidymodels.html#1" class="uri">https://sta-363-s20.lucymcgowan.com/slides/12-tidymodels.html#1</a>.</p>
+<p>Based on <a href="https://sta-363-s20.lucymcgowan.com/slides/12-tidymodels.html#1" class="uri">https://sta-363-s20.lucymcgowan.com/slides/12-tidymodels.html#1</a>.</p>
+<section id="basic-lm-with-tidymodels" class="level2">
+<h2 class="anchored" data-anchor-id="basic-lm-with-tidymodels">Basic LM with tidymodels</h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidymodels)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
@@ -141,7 +141,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 ✖ dplyr::filter()  masks stats::filter()
 ✖ dplyr::lag()     masks stats::lag()
 ✖ recipes::step()  masks stats::step()
-• Dig deeper into tidy modeling with R at https://www.tmwr.org</code></pre>
+• Search for functions across packages at https://www.tidymodels.org/find/</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(glmnet)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
@@ -186,8 +186,8 @@ Attaching package: 'Matrix'</code></pre>
 2 rsq     standard       0.613 Preprocessor1_Model1</code></pre>
 </div>
 </div>
-<section id="using-cross-validation" class="level2">
-<h2 class="anchored" data-anchor-id="using-cross-validation">Using cross validation</h2>
+<section id="using-cross-validation" class="level3">
+<h3 class="anchored" data-anchor-id="using-cross-validation">Using cross validation</h3>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>car_cv <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(car_data, <span class="at">v =</span> <span class="dv">5</span>)</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -215,8 +215,8 @@ Attaching package: 'Matrix'</code></pre>
 </div>
 </div>
 </section>
-<section id="recipes" class="level2">
-<h2 class="anchored" data-anchor-id="recipes">Recipes</h2>
+<section id="recipes" class="level3">
+<h3 class="anchored" data-anchor-id="recipes">Recipes</h3>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>car_recipe <span class="ot">&lt;-</span></span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">recipe</span>(mpg <span class="sc">~</span> horsepower <span class="sc">+</span> displacement <span class="sc">+</span> weight, <span class="at">data =</span> car_data) <span class="sc">%&gt;%</span> </span>
@@ -378,6 +378,131 @@ Attaching package: 'Matrix'</code></pre>
 </div>
 </div>
 <p>Seems to make no difference: best result is still the one without penalisation.</p>
+<section id="whole-process" class="level2">
+<h2 class="anchored" data-anchor-id="whole-process">Whole process</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>data_df <span class="ot">&lt;-</span> Auto <span class="co"># retrieve and prepare data</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>data_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(data_df, <span class="at">prop =</span> <span class="fl">0.5</span>) <span class="co"># also strata, if required</span></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>data_train <span class="ot">&lt;-</span> <span class="fu">training</span>(data_split)</span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>data_cv <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(data_train, <span class="at">v =</span> <span class="dv">5</span>)</span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a>recipe_modelname <span class="ot">&lt;-</span> <span class="fu">recipe</span>(mpg <span class="sc">~</span> horsepower <span class="sc">+</span> displacement <span class="sc">+</span> weight,</span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a>                       <span class="at">data =</span> data_train) <span class="sc">%&gt;%</span> </span>
+<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_scale</span>(<span class="fu">all_predictors</span>()) <span class="co"># pre-process as required</span></span>
+<span id="cb38-10"><a href="#cb38-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-11"><a href="#cb38-11" aria-hidden="true" tabindex="-1"></a>spec_modelname <span class="ot">&lt;-</span> <span class="fu">linear_reg</span>(</span>
+<span id="cb38-12"><a href="#cb38-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">penalty =</span> <span class="fu">tune</span>(),</span>
+<span id="cb38-13"><a href="#cb38-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">mixture =</span> <span class="fu">tune</span>()</span>
+<span id="cb38-14"><a href="#cb38-14" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span> </span>
+<span id="cb38-15"><a href="#cb38-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">"glmnet"</span>)</span>
+<span id="cb38-16"><a href="#cb38-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-17"><a href="#cb38-17" aria-hidden="true" tabindex="-1"></a>grid_modelname <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(</span>
+<span id="cb38-18"><a href="#cb38-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">penalty =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">100</span>, <span class="at">by =</span> <span class="dv">10</span>),</span>
+<span id="cb38-19"><a href="#cb38-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">mixture =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="at">by =</span> <span class="fl">0.2</span>)</span>
+<span id="cb38-20"><a href="#cb38-20" aria-hidden="true" tabindex="-1"></a>)  </span>
+<span id="cb38-21"><a href="#cb38-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-22"><a href="#cb38-22" aria-hidden="true" tabindex="-1"></a>tuning_modelname <span class="ot">&lt;-</span> <span class="fu">tune_grid</span>(spec_modelname,</span>
+<span id="cb38-23"><a href="#cb38-23" aria-hidden="true" tabindex="-1"></a>                    recipe_modelname,</span>
+<span id="cb38-24"><a href="#cb38-24" aria-hidden="true" tabindex="-1"></a>                    <span class="at">grid =</span> grid_modelname,</span>
+<span id="cb38-25"><a href="#cb38-25" aria-hidden="true" tabindex="-1"></a>                    <span class="at">resamples =</span> data_cv)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>! Fold1: internal: A correlation computation is required, but `estimate` is constant and ha...</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>! Fold2: internal: A correlation computation is required, but `estimate` is constant and ha...</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>! Fold3: internal: A correlation computation is required, but `estimate` is constant and ha...</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>! Fold4: internal: A correlation computation is required, but `estimate` is constant and ha...</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>! Fold5: internal: A correlation computation is required, but `estimate` is constant and ha...</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>tuning_modelname <span class="sc">%&gt;%</span> </span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">collect_metrics</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">"rmse"</span>) <span class="sc">%&gt;%</span> <span class="co"># choose metric as required</span></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(mean)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 66 × 8
+   penalty mixture .metric .estimator  mean     n std_err .config              
+     &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;                
+ 1       0     0   rmse    standard    4.06     5   0.222 Preprocessor1_Model01
+ 2       0     1   rmse    standard    4.08     5   0.177 Preprocessor1_Model56
+ 3       0     0.8 rmse    standard    4.08     5   0.178 Preprocessor1_Model45
+ 4       0     0.4 rmse    standard    4.08     5   0.178 Preprocessor1_Model23
+ 5       0     0.6 rmse    standard    4.08     5   0.178 Preprocessor1_Model34
+ 6       0     0.2 rmse    standard    4.08     5   0.179 Preprocessor1_Model12
+ 7      10     0   rmse    standard    4.66     5   0.291 Preprocessor1_Model02
+ 8      20     0   rmse    standard    5.25     5   0.293 Preprocessor1_Model03
+ 9      10     0.2 rmse    standard    5.31     5   0.290 Preprocessor1_Model13
+10      30     0   rmse    standard    5.68     5   0.289 Preprocessor1_Model04
+# … with 56 more rows</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="co"># then choose preferred hyperparameters</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>final_spec_modelname <span class="ot">&lt;-</span> <span class="fu">linear_reg</span>(</span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">penalty =</span> <span class="dv">0</span>,</span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">mixture =</span> <span class="dv">0</span></span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span> </span>
+<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">"glmnet"</span>) <span class="co"># there might be an easier way to do this with tidymodels</span></span>
+<span id="cb46-8"><a href="#cb46-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-9"><a href="#cb46-9" aria-hidden="true" tabindex="-1"></a>fit_modelname <span class="ot">&lt;-</span> <span class="fu">last_fit</span>(</span>
+<span id="cb46-10"><a href="#cb46-10" aria-hidden="true" tabindex="-1"></a>  final_spec_modelname,</span>
+<span id="cb46-11"><a href="#cb46-11" aria-hidden="true" tabindex="-1"></a>  recipe_modelname,</span>
+<span id="cb46-12"><a href="#cb46-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">split =</span> data_split</span>
+<span id="cb46-13"><a href="#cb46-13" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb46-14"><a href="#cb46-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-15"><a href="#cb46-15" aria-hidden="true" tabindex="-1"></a>fit_modelname <span class="sc">%&gt;%</span> </span>
+<span id="cb46-16"><a href="#cb46-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">collect_metrics</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 4
+  .metric .estimator .estimate .config             
+  &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;               
+1 rmse    standard       4.49  Preprocessor1_Model1
+2 rsq     standard       0.670 Preprocessor1_Model1</code></pre>
+</div>
+</div>
+</section>
+<section id="using-usemodels-to-suggest-a-workflow" class="level2">
+<h2 class="anchored" data-anchor-id="using-usemodels-to-suggest-a-workflow">Using <code>usemodels</code> to suggest a workflow</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(usemodels)</span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a><span class="fu">use_glmnet</span>(mpg <span class="sc">~</span> horsepower <span class="sc">+</span> displacement <span class="sc">+</span> weight,</span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>                       <span class="at">data =</span> data_train,</span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a>           <span class="at">verbose =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>glmnet_recipe &lt;- 
+  recipe(formula = mpg ~ horsepower + displacement + weight, data = data_train) %&gt;% 
+  ## Regularization methods sum up functions of the model slope 
+  ## coefficients. Because of this, the predictor variables should be on 
+  ## the same scale. Before centering and scaling the numeric predictors, 
+  ## any predictors with a single unique value are filtered out. 
+  step_zv(all_predictors()) %&gt;% 
+  step_normalize(all_numeric_predictors()) 
+
+glmnet_spec &lt;- 
+  linear_reg(penalty = tune(), mixture = tune()) %&gt;% 
+  set_mode("regression") %&gt;% 
+  set_engine("glmnet") 
+
+glmnet_workflow &lt;- 
+  workflow() %&gt;% 
+  add_recipe(glmnet_recipe) %&gt;% 
+  add_model(glmnet_spec) 
+
+glmnet_grid &lt;- tidyr::crossing(penalty = 10^seq(-6, -1, length.out = 20), mixture = c(0.05, 
+    0.2, 0.4, 0.6, 0.8, 1)) 
+
+glmnet_tune &lt;- 
+  tune_grid(glmnet_workflow, resamples = stop("add your rsample object"), grid = glmnet_grid) </code></pre>
+</div>
+</div>
+<p>The <code>use_glmnet()</code> function suggests a slightly different pre-processing step and penalty grid, but is otherwise functionally the same. The zv and normalize steps are sensible choices, and the exponential series of penalties in the grid is probably a better selection for this application.</p>
+</section>
 </section>
 
 </main>

@@ -4,9 +4,9 @@ format: html
 editor: visual
 ---
 
-# Basic LM with tidymodels
+Based on <https://sta-363-s20.lucymcgowan.com/slides/12-tidymodels.html#1>.
 
-Loosely based on <https://sta-363-s20.lucymcgowan.com/slides/12-tidymodels.html#1>.
+## Basic LM with tidymodels
 
 ```{r}
 library(tidymodels)
@@ -32,7 +32,7 @@ lm_fit %>%
   collect_metrics()
 ```
 
-## Using cross validation
+### Using cross validation
 
 ```{r}
 car_cv <- vfold_cv(car_data, v = 5)
@@ -49,7 +49,7 @@ results_hpsq %>% collect_metrics()
 
 ```
 
-## Recipes
+### Recipes
 
 ```{r}
 car_recipe <-
@@ -137,4 +137,70 @@ results_penalised_2 %>%
 ```
 
 Seems to make no difference: best result is still the one without penalisation.
+
+## Whole process
+
+```{r}
+data_df <- Auto # retrieve and prepare data
+
+data_split <- initial_split(data_df, prop = 0.5) # also strata, if required
+data_train <- training(data_split)
+data_cv <- vfold_cv(data_train, v = 5)
+
+recipe_modelname <- recipe(mpg ~ horsepower + displacement + weight,
+                       data = data_train) %>% 
+  step_scale(all_predictors()) # pre-process as required
+
+spec_modelname <- linear_reg(
+  penalty = tune(),
+  mixture = tune()
+) %>% 
+  set_engine("glmnet")
+
+grid_modelname <- expand.grid(
+  penalty = seq(0, 100, by = 10),
+  mixture = seq(0, 1, by = 0.2)
+)  
+
+tuning_modelname <- tune_grid(spec_modelname,
+                    recipe_modelname,
+                    grid = grid_modelname,
+                    resamples = data_cv)
+
+tuning_modelname %>% 
+  collect_metrics() %>% 
+  filter(.metric == "rmse") %>% # choose metric as required
+  arrange(mean)
+
+# then choose preferred hyperparameters
+
+final_spec_modelname <- linear_reg(
+  penalty = 0,
+  mixture = 0
+) %>% 
+  set_engine("glmnet") # there might be an easier way to do this with tidymodels
+
+fit_modelname <- last_fit(
+  final_spec_modelname,
+  recipe_modelname,
+  split = data_split
+)
+
+fit_modelname %>% 
+  collect_metrics()
+
+```
+
+## Using `usemodels` to suggest a workflow
+
+```{r}
+library(usemodels)
+
+use_glmnet(mpg ~ horsepower + displacement + weight,
+                       data = data_train,
+           verbose = TRUE)
+
+```
+
+The `use_glmnet()` function suggests a slightly different pre-processing step and penalty grid, but is otherwise functionally the same. The zv and normalize steps are sensible choices, and the exponential series of penalties in the grid is probably a better selection for this application.
 

@@ -11,8 +11,9 @@ Loosely based on <https://sta-363-s20.lucymcgowan.com/slides/12-tidymodels.html#
 ```{r}
 library(tidymodels)
 library(glmnet)
+library(ISLR)
 
-car_data <- mtcars
+car_data <- Auto
 
 lm_spec <- 
   linear_reg() %>% 
@@ -24,7 +25,7 @@ car_split <- car_data %>%
 
 # using last_fit() as a shortcut
 lm_fit <- last_fit(lm_spec,
-              mpg ~ hp,
+              mpg ~ horsepower,
               split = car_split)
 
 lm_fit %>% 
@@ -37,12 +38,12 @@ lm_fit %>%
 car_cv <- vfold_cv(car_data, v = 5)
 
 results <- fit_resamples(lm_spec,
-              mpg ~ hp,
+              mpg ~ horsepower,
               resamples = car_cv)
 results %>% collect_metrics()
 
 results_hpsq <- fit_resamples(lm_spec,
-              mpg ~ hp + I(hp ^ 2),
+              mpg ~ horsepower + I(horsepower ^ 2),
               resamples = car_cv)
 results_hpsq %>% collect_metrics()
 
@@ -52,7 +53,7 @@ results_hpsq %>% collect_metrics()
 
 ```{r}
 car_recipe <-
-  recipe(mpg ~ hp + disp + wt, data = car_data) %>% 
+  recipe(mpg ~ horsepower + displacement + weight, data = car_data) %>% 
   step_scale(all_predictors())
 
 results_scaled <- fit_resamples(lm_spec,
@@ -111,7 +112,7 @@ car_data_2 <- car_data %>%
   mutate(meaningless = runif(n()))
 
 car_recipe_2 <-
-  recipe(mpg ~ hp + disp + wt + meaningless, data = car_data_2) %>% 
+  recipe(mpg ~ horsepower + displacement + weight + meaningless, data = car_data_2) %>% 
   step_scale(all_predictors())
 
 car_cv_2 <- vfold_cv(car_data_2, v = 5)
@@ -135,4 +136,5 @@ results_penalised_2 %>%
   labs(y = "RMSE")
 ```
 
-Seems to make no difference.
+Seems to make no difference: best result is still the one without penalisation.
+

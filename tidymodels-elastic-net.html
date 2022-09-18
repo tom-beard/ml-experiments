@@ -141,7 +141,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 ✖ dplyr::filter()  masks stats::filter()
 ✖ dplyr::lag()     masks stats::lag()
 ✖ recipes::step()  masks stats::step()
-• Use tidymodels_prefer() to resolve common conflicts.</code></pre>
+• Dig deeper into tidy modeling with R at https://www.tmwr.org</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(glmnet)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
@@ -159,29 +159,31 @@ Attaching package: 'Matrix'</code></pre>
 <div class="cell-output cell-output-stderr">
 <pre><code>Loaded glmnet 4.1-4</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>car_data <span class="ot">&lt;-</span> mtcars</span>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ISLR)</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>lm_spec <span class="ot">&lt;-</span> </span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">linear_reg</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="at">engine =</span> <span class="st">"lm"</span>)</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">100</span>)</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>car_split <span class="ot">&lt;-</span> car_data <span class="sc">%&gt;%</span> </span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">initial_split</span>(<span class="at">prop =</span> <span class="fl">0.5</span>)</span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="co"># using last_fit() as a shortcut</span></span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>lm_fit <span class="ot">&lt;-</span> <span class="fu">last_fit</span>(lm_spec,</span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>              mpg <span class="sc">~</span> hp,</span>
-<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>              <span class="at">split =</span> car_split)</span>
-<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>lm_fit <span class="sc">%&gt;%</span> </span>
-<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">collect_metrics</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>car_data <span class="ot">&lt;-</span> Auto</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>lm_spec <span class="ot">&lt;-</span> </span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">linear_reg</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="at">engine =</span> <span class="st">"lm"</span>)</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">100</span>)</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>car_split <span class="ot">&lt;-</span> car_data <span class="sc">%&gt;%</span> </span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">initial_split</span>(<span class="at">prop =</span> <span class="fl">0.5</span>)</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="co"># using last_fit() as a shortcut</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>lm_fit <span class="ot">&lt;-</span> <span class="fu">last_fit</span>(lm_spec,</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>              mpg <span class="sc">~</span> horsepower,</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>              <span class="at">split =</span> car_split)</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>lm_fit <span class="sc">%&gt;%</span> </span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">collect_metrics</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 2 × 4
   .metric .estimator .estimate .config             
   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;               
-1 rmse    standard       4.66  Preprocessor1_Model1
-2 rsq     standard       0.671 Preprocessor1_Model1</code></pre>
+1 rmse    standard       4.96  Preprocessor1_Model1
+2 rsq     standard       0.613 Preprocessor1_Model1</code></pre>
 </div>
 </div>
 <section id="using-cross-validation" class="level2">
@@ -190,26 +192,26 @@ Attaching package: 'Matrix'</code></pre>
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>car_cv <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(car_data, <span class="at">v =</span> <span class="dv">5</span>)</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>results <span class="ot">&lt;-</span> <span class="fu">fit_resamples</span>(lm_spec,</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>              mpg <span class="sc">~</span> hp,</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>              mpg <span class="sc">~</span> horsepower,</span>
 <span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>              <span class="at">resamples =</span> car_cv)</span>
 <span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>results <span class="sc">%&gt;%</span> <span class="fu">collect_metrics</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 2 × 6
   .metric .estimator  mean     n std_err .config             
   &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               
-1 rmse    standard   3.42      5  0.864  Preprocessor1_Model1
-2 rsq     standard   0.758     5  0.0825 Preprocessor1_Model1</code></pre>
+1 rmse    standard   4.88      5  0.385  Preprocessor1_Model1
+2 rsq     standard   0.616     5  0.0220 Preprocessor1_Model1</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>results_hpsq <span class="ot">&lt;-</span> <span class="fu">fit_resamples</span>(lm_spec,</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>              mpg <span class="sc">~</span> hp <span class="sc">+</span> <span class="fu">I</span>(hp <span class="sc">^</span> <span class="dv">2</span>),</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>              mpg <span class="sc">~</span> horsepower <span class="sc">+</span> <span class="fu">I</span>(horsepower <span class="sc">^</span> <span class="dv">2</span>),</span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>              <span class="at">resamples =</span> car_cv)</span>
 <span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>results_hpsq <span class="sc">%&gt;%</span> <span class="fu">collect_metrics</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 2 × 6
   .metric .estimator  mean     n std_err .config             
   &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               
-1 rmse    standard   3.22      5  0.498  Preprocessor1_Model1
-2 rsq     standard   0.842     5  0.0534 Preprocessor1_Model1</code></pre>
+1 rmse    standard   4.38      5  0.294  Preprocessor1_Model1
+2 rsq     standard   0.692     5  0.0224 Preprocessor1_Model1</code></pre>
 </div>
 </div>
 </section>
@@ -217,7 +219,7 @@ Attaching package: 'Matrix'</code></pre>
 <h2 class="anchored" data-anchor-id="recipes">Recipes</h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>car_recipe <span class="ot">&lt;-</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">recipe</span>(mpg <span class="sc">~</span> hp <span class="sc">+</span> disp <span class="sc">+</span> wt, <span class="at">data =</span> car_data) <span class="sc">%&gt;%</span> </span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">recipe</span>(mpg <span class="sc">~</span> horsepower <span class="sc">+</span> displacement <span class="sc">+</span> weight, <span class="at">data =</span> car_data) <span class="sc">%&gt;%</span> </span>
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_scale</span>(<span class="fu">all_predictors</span>())</span>
 <span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>results_scaled <span class="ot">&lt;-</span> <span class="fu">fit_resamples</span>(lm_spec,</span>
@@ -230,8 +232,8 @@ Attaching package: 'Matrix'</code></pre>
 <pre><code># A tibble: 2 × 6
   .metric .estimator  mean     n std_err .config             
   &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               
-1 rmse    standard   2.78      5  0.363  Preprocessor1_Model1
-2 rsq     standard   0.853     5  0.0134 Preprocessor1_Model1</code></pre>
+1 rmse    standard   4.25      5  0.321  Preprocessor1_Model1
+2 rsq     standard   0.713     5  0.0183 Preprocessor1_Model1</code></pre>
 </div>
 </div>
 </section>
@@ -250,8 +252,8 @@ Attaching package: 'Matrix'</code></pre>
 <pre><code># A tibble: 2 × 6
   .metric .estimator  mean     n std_err .config             
   &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               
-1 rmse    standard   5.00      5  0.860  Preprocessor1_Model1
-2 rsq     standard   0.852     5  0.0116 Preprocessor1_Model1</code></pre>
+1 rmse    standard   6.79      5  0.546  Preprocessor1_Model1
+2 rsq     standard   0.705     5  0.0199 Preprocessor1_Model1</code></pre>
 </div>
 </div>
 <p>Now to tune the hyperparameters.</p>
@@ -289,16 +291,16 @@ Attaching package: 'Matrix'</code></pre>
 <pre><code># A tibble: 66 × 8
    penalty mixture .metric .estimator  mean     n std_err .config              
      &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;                
- 1       0     0   rmse    standard    2.73     5   0.309 Preprocessor1_Model01
- 2       0     1   rmse    standard    2.77     5   0.361 Preprocessor1_Model56
- 3       0     0.8 rmse    standard    2.77     5   0.360 Preprocessor1_Model45
- 4       0     0.6 rmse    standard    2.77     5   0.358 Preprocessor1_Model34
- 5       0     0.2 rmse    standard    2.77     5   0.356 Preprocessor1_Model12
- 6       0     0.4 rmse    standard    2.78     5   0.357 Preprocessor1_Model23
- 7      10     0   rmse    standard    3.18     5   0.659 Preprocessor1_Model02
- 8      20     0   rmse    standard    3.74     5   0.764 Preprocessor1_Model03
- 9      10     0.2 rmse    standard    3.93     5   0.792 Preprocessor1_Model13
-10      30     0   rmse    standard    4.11     5   0.803 Preprocessor1_Model04
+ 1       0     0.6 rmse    standard    4.25     5   0.324 Preprocessor1_Model34
+ 2       0     0.4 rmse    standard    4.25     5   0.324 Preprocessor1_Model23
+ 3       0     0.2 rmse    standard    4.25     5   0.324 Preprocessor1_Model12
+ 4       0     0.8 rmse    standard    4.25     5   0.324 Preprocessor1_Model45
+ 5       0     1   rmse    standard    4.25     5   0.324 Preprocessor1_Model56
+ 6       0     0   rmse    standard    4.25     5   0.344 Preprocessor1_Model01
+ 7      10     0   rmse    standard    4.72     5   0.453 Preprocessor1_Model02
+ 8      20     0   rmse    standard    5.25     5   0.494 Preprocessor1_Model03
+ 9      10     0.2 rmse    standard    5.34     5   0.509 Preprocessor1_Model13
+10      30     0   rmse    standard    5.66     5   0.514 Preprocessor1_Model04
 # … with 56 more rows</code></pre>
 </div>
 </div>
@@ -320,7 +322,7 @@ Attaching package: 'Matrix'</code></pre>
 <span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">meaningless =</span> <span class="fu">runif</span>(<span class="fu">n</span>()))</span>
 <span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>car_recipe_2 <span class="ot">&lt;-</span></span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">recipe</span>(mpg <span class="sc">~</span> hp <span class="sc">+</span> disp <span class="sc">+</span> wt <span class="sc">+</span> meaningless, <span class="at">data =</span> car_data_2) <span class="sc">%&gt;%</span> </span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">recipe</span>(mpg <span class="sc">~</span> horsepower <span class="sc">+</span> displacement <span class="sc">+</span> weight <span class="sc">+</span> meaningless, <span class="at">data =</span> car_data_2) <span class="sc">%&gt;%</span> </span>
 <span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_scale</span>(<span class="fu">all_predictors</span>())</span>
 <span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>car_cv_2 <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(car_data_2, <span class="at">v =</span> <span class="dv">5</span>)</span>
@@ -352,16 +354,16 @@ Attaching package: 'Matrix'</code></pre>
 <pre><code># A tibble: 66 × 8
    penalty mixture .metric .estimator  mean     n std_err .config              
      &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;                
- 1       0     0   rmse    standard    2.68     5   0.354 Preprocessor1_Model01
- 2       0     0.6 rmse    standard    2.69     5   0.393 Preprocessor1_Model34
- 3       0     0.4 rmse    standard    2.69     5   0.393 Preprocessor1_Model23
- 4       0     0.2 rmse    standard    2.69     5   0.393 Preprocessor1_Model12
- 5       0     0.8 rmse    standard    2.69     5   0.393 Preprocessor1_Model45
- 6       0     1   rmse    standard    2.69     5   0.393 Preprocessor1_Model56
- 7      10     0   rmse    standard    3.35     5   0.464 Preprocessor1_Model02
- 8      20     0   rmse    standard    4.02     5   0.491 Preprocessor1_Model03
- 9      10     0.2 rmse    standard    4.24     5   0.515 Preprocessor1_Model13
-10      30     0   rmse    standard    4.45     5   0.501 Preprocessor1_Model04
+ 1       0     0.8 rmse    standard    4.26     5   0.185 Preprocessor1_Model45
+ 2       0     1   rmse    standard    4.26     5   0.184 Preprocessor1_Model56
+ 3       0     0.6 rmse    standard    4.26     5   0.186 Preprocessor1_Model34
+ 4       0     0.4 rmse    standard    4.26     5   0.186 Preprocessor1_Model23
+ 5       0     0.2 rmse    standard    4.26     5   0.187 Preprocessor1_Model12
+ 6       0     0   rmse    standard    4.27     5   0.193 Preprocessor1_Model01
+ 7      10     0   rmse    standard    4.76     5   0.198 Preprocessor1_Model02
+ 8      20     0   rmse    standard    5.31     5   0.203 Preprocessor1_Model03
+ 9      10     0.2 rmse    standard    5.38     5   0.201 Preprocessor1_Model13
+10      30     0   rmse    standard    5.72     5   0.203 Preprocessor1_Model04
 # … with 56 more rows</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>results_penalised_2 <span class="sc">%&gt;%</span></span>
@@ -375,7 +377,7 @@ Attaching package: 'Matrix'</code></pre>
 <p><img src="tidymodels-elastic-net_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
-<p>Seems to make no difference.</p>
+<p>Seems to make no difference: best result is still the one without penalisation.</p>
 </section>
 
 </main>
